@@ -1,0 +1,6 @@
+modules = ["java-graalvm22.3", "cpp-clang14", "bash"]
+
+[nix]
+channel = "stable-25_05"
+
+run = "bash build.sh"
