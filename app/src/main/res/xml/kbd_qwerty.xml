@@ -23,4 +23,11 @@
 >
     <include
         latin:keyboardLayout="@xml/rows_qwerty" />
+    <Row>
+        <Key
+            latin:codes="-101"
+            latin:keyLabel="AI"
+            latin:keyEdgeFlags="right"
+            latin:isRepeatable="false"/>
+    </Row>
 </Keyboard>
