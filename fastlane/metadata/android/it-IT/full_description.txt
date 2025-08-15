@@ -1,4 +1,4 @@
-OpenBoard è una tastiera che rispetta la tua privacy, basata su AOSP e priva di dipendenze da binari Google.
+Lancar è una tastiera che rispetta la tua privacy, basata su AOSP e priva di dipendenze da binari Google.
 
 Ha le seguenti funzionalità:
  - correzione del testo

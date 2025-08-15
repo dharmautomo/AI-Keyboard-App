@@ -1,4 +1,4 @@
-OpenBoard is a 100% foss keyboard based on AOSP, with no dependency on Google binaries, that respects your privacy.
+Lancar is a 100% foss keyboard based on AOSP, with no dependency on Google binaries, that respects your privacy.
 
 Features:
  - Spell correction
