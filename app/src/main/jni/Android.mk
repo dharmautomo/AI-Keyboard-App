@@ -31,6 +31,9 @@ LOCAL_CFLAGS += -Werror -Wall -Wextra -Weffc++ -Wformat=2 -Wcast-qual -Wcast-ali
     -Wwrite-strings -Wfloat-equal -Wpointer-arith -Winit-self -Wredundant-decls \
     -Woverloaded-virtual -Wsign-promo -Wno-system-headers
 
+# Allow specific noisy warnings without failing the build
+LOCAL_CFLAGS += -Wno-error=unused-but-set-variable -Wno-error=deprecated-copy
+
 # To suppress compiler warnings for unused variables/functions used for debug features etc.
 LOCAL_CFLAGS += -Wno-unused-parameter -Wno-unused-function
 

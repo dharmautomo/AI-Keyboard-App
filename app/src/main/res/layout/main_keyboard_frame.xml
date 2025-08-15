@@ -20,20 +20,42 @@
 
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="wrap_content"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_gravity="bottom"
     android:orientation="vertical" >
 
-    <!-- To ensure that key preview popup is correctly placed when the current system locale is
-         one of RTL locales, layoutDirection="ltr" is needed in the SDK version 17+. -->
-    <org.dslul.openboard.inputmethod.latin.suggestions.SuggestionStripView
-        android:id="@+id/suggestion_strip_view"
-        android:layoutDirection="ltr"
+    <!-- AI action strip at the very top, separate from keyboard -->
+    <include
+        android:id="@+id/ai_action_strip"
+        layout="@layout/ai_action_strip"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/config_suggestions_strip_height"
-        android:gravity="center_vertical"
-        style="?attr/suggestionStripViewStyle" />
+        android:layout_height="wrap_content" />
+
+    <!-- Separator between AI strip and keyboard area -->
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#22FFFFFF"
+        android:layout_marginTop="4dp" />
+
+    <!-- Main keyboard area with consistent spacing -->
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:orientation="vertical"
+        android:paddingTop="8dp" >
+
+        <!-- To ensure that key preview popup is correctly placed when the current system locale is
+             one of RTL locales, layoutDirection="ltr" is needed in the SDK version 17+. -->
+        <org.dslul.openboard.inputmethod.latin.suggestions.SuggestionStripView
+            android:id="@+id/suggestion_strip_view"
+            android:layoutDirection="ltr"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/config_suggestions_strip_height"
+            android:gravity="center_vertical"
+            style="?attr/suggestionStripViewStyle" />
 
     <!-- To ensure that key preview popup is correctly placed when the current system locale is
          one of RTL locales, layoutDirection="ltr" is needed in the SDK version 17+. -->
@@ -66,5 +88,7 @@
             style="?attr/suggestionWordStyle" />
 
     </org.dslul.openboard.inputmethod.latin.KeyboardWrapperView>
+
+    </LinearLayout>
 
 </LinearLayout>

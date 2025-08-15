@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Increase visual weight of AI action strip buttons -->
+    <dimen name="ai_action_strip_text_size">14sp</dimen>
     <dimen name="settings_screen_icon_inset">16dp</dimen>
 </resources>

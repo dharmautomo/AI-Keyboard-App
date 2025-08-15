@@ -1,0 +1,159 @@
+<?xml version="1.0" encoding="utf-8"?>
+<HorizontalScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/ai_action_strip_container"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:fillViewport="false"
+    android:scrollbars="none"
+    android:paddingStart="8dp"
+    android:paddingEnd="8dp"
+    android:paddingTop="8dp"
+    android:paddingBottom="8dp"
+    android:background="#1A1A1A">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/ai_btn_reply"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:minHeight="36dp"
+            android:minWidth="0dp"
+            android:layout_marginEnd="8dp"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:background="@drawable/bg_ai_chip"
+            android:text="@string/ai_reply"
+            android:textColor="@android:color/white"
+            android:textAllCaps="false"
+            android:textSize="@dimen/ai_action_strip_text_size"
+            android:drawableStart="@drawable/ic_ai_reply"
+            android:drawablePadding="8dp" />
+
+        <Button
+            android:id="@+id/ai_btn_improve"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:minHeight="36dp"
+            android:minWidth="0dp"
+            android:layout_marginEnd="8dp"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:background="@drawable/bg_ai_chip"
+            android:text="@string/ai_improve"
+            android:textColor="@android:color/white"
+            android:textAllCaps="false"
+            android:textSize="@dimen/ai_action_strip_text_size"
+            android:drawableStart="@drawable/ic_ai_improve"
+            android:drawablePadding="8dp" />
+
+        <Button
+            android:id="@+id/ai_btn_grammar"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:minHeight="36dp"
+            android:minWidth="0dp"
+            android:layout_marginEnd="8dp"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:background="@drawable/bg_ai_chip"
+            android:text="@string/ai_grammar"
+            android:textColor="@android:color/white"
+            android:textAllCaps="false"
+            android:textSize="@dimen/ai_action_strip_text_size"
+            android:drawableStart="@drawable/ic_ai_grammar"
+            android:drawablePadding="8dp" />
+
+        <Button
+            android:id="@+id/ai_btn_translate"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:minHeight="36dp"
+            android:minWidth="0dp"
+            android:layout_marginEnd="8dp"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:background="@drawable/bg_ai_chip"
+            android:text="@string/ai_translate"
+            android:textColor="@android:color/white"
+            android:textAllCaps="false"
+            android:textSize="@dimen/ai_action_strip_text_size"
+            android:drawableStart="@drawable/ic_ai_translate"
+            android:drawablePadding="8dp" />
+
+        <Button
+            android:id="@+id/ai_btn_custom_prompt"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:minHeight="36dp"
+            android:minWidth="0dp"
+            android:layout_marginEnd="8dp"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:background="@drawable/bg_ai_chip"
+            android:text="@string/ai_prompt"
+            android:textColor="@android:color/white"
+            android:textAllCaps="false"
+            android:textSize="@dimen/ai_action_strip_text_size"
+            android:drawablePadding="8dp" />
+
+        <View
+            android:layout_width="16dp"
+            android:layout_height="0dp" />
+
+        <Button
+            android:id="@+id/ai_btn_templates"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:minHeight="36dp"
+            android:minWidth="0dp"
+            android:layout_marginEnd="8dp"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:background="@drawable/bg_ai_chip"
+            android:text="@string/ai_templates"
+            android:textColor="@android:color/white"
+            android:textAllCaps="false"
+            android:textSize="@dimen/ai_action_strip_text_size"
+            android:drawablePadding="8dp" />
+
+        <Button
+            android:id="@+id/ai_btn_clipboard"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:minHeight="36dp"
+            android:minWidth="0dp"
+            android:layout_marginEnd="8dp"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:background="@drawable/bg_ai_chip"
+            android:text="@string/ai_clipboard"
+            android:textColor="@android:color/white"
+            android:textAllCaps="false"
+            android:textSize="@dimen/ai_action_strip_text_size"
+            android:drawablePadding="8dp" />
+
+        <Button
+            android:id="@+id/ai_btn_emoji"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:minHeight="36dp"
+            android:minWidth="0dp"
+            android:layout_marginEnd="8dp"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:background="@drawable/bg_ai_chip"
+            android:text="@string/ai_emoji"
+            android:textColor="@android:color/white"
+            android:textAllCaps="false"
+            android:textSize="@dimen/ai_action_strip_text_size"
+            android:drawablePadding="8dp" />
+
+    </LinearLayout>
+
+</HorizontalScrollView>
+
+

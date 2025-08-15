@@ -16,7 +16,16 @@
 ** See the License for the specific language governing permissions and
 ** limitations under the License.
 */
---><resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+ --><resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+    <!-- TODO: Localize AI action strip labels -->
+    <string name="ai_reply">Reply</string>
+    <string name="ai_improve">Improve</string>
+    <string name="ai_grammar">Grammar</string>
+    <string name="ai_translate">Translate</string>
+    <string name="ai_prompt">Prompt</string>
+    <string name="ai_templates">Templates</string>
+    <string name="ai_clipboard">Clipboard</string>
+    <string name="ai_emoji">Emoji</string>
     <string name="english_ime_name" translatable="false">OpenBoard</string>
     <!-- Name of Android spell checker service. AOSP(Android Open Source Project) should not be translated.
          This resource should be copied from msgid="511950477199948048" -->

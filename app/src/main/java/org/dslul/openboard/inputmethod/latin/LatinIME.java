@@ -834,6 +834,79 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
         if (hasSuggestionStripView()) {
             mSuggestionStripView.setListener(this, view);
         }
+
+        // Wire action strip buttons
+        final View btnReply = view.findViewById(R.id.ai_btn_reply);
+        if (btnReply != null) {
+            btnReply.setOnClickListener(v -> onAiAction(org.dslul.openboard.inputmethod.latin.ai.AiProvider.Action.REPLY));
+        }
+        final View btnImprove = view.findViewById(R.id.ai_btn_improve);
+        if (btnImprove != null) {
+            btnImprove.setOnClickListener(v -> onAiAction(org.dslul.openboard.inputmethod.latin.ai.AiProvider.Action.IMPROVE));
+        }
+        final View btnTranslate = view.findViewById(R.id.ai_btn_translate);
+        if (btnTranslate != null) {
+            btnTranslate.setOnClickListener(v -> onAiAction(org.dslul.openboard.inputmethod.latin.ai.AiProvider.Action.TRANSLATE));
+        }
+
+        final View btnEmoji = view.findViewById(R.id.ai_btn_emoji);
+        if (btnEmoji != null) {
+            btnEmoji.setOnClickListener(v ->
+                    mKeyboardSwitcher.onToggleKeyboard(
+                            org.dslul.openboard.inputmethod.keyboard.KeyboardSwitcher.KeyboardSwitchState.EMOJI));
+        }
+        final View btnClipboard = view.findViewById(R.id.ai_btn_clipboard);
+        if (btnClipboard != null) {
+            btnClipboard.setOnClickListener(v ->
+                    mKeyboardSwitcher.onToggleKeyboard(
+                            org.dslul.openboard.inputmethod.keyboard.KeyboardSwitcher.KeyboardSwitchState.CLIPBOARD));
+        }
+        final View btnGrammar = view.findViewById(R.id.ai_btn_grammar);
+        if (btnGrammar != null) {
+            btnGrammar.setOnClickListener(v -> onAiAction(org.dslul.openboard.inputmethod.latin.ai.AiProvider.Action.GRAMMAR));
+        }
+    }
+
+    private void onAiAction(final org.dslul.openboard.inputmethod.latin.ai.AiProvider.Action action) {
+        // Guardrails: don't process password/private fields
+        final SettingsValues sv = mSettings.getCurrent();
+        if (sv != null && sv.mInputAttributes != null && sv.mInputAttributes.mIsPasswordField) {
+            android.widget.Toast.makeText(this, R.string.subtype_no_language, android.widget.Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        CharSequence before = mInputLogic.mConnection.getTextBeforeCursor(2048, 0);
+        CharSequence after = mInputLogic.mConnection.getTextAfterCursor(2048, 0);
+        CharSequence selected = mInputLogic.mConnection.getSelectedText(0);
+
+        // Bridge to Kotlin controller
+        org.dslul.openboard.inputmethod.latin.ai.AiActionController controller =
+                new org.dslul.openboard.inputmethod.latin.ai.AiActionController(
+                        new org.dslul.openboard.inputmethod.latin.ai.AiProviderOpenAI(),
+                        content -> {
+                            // Commit result on main thread
+                            getMainLooper().getQueue().addIdleHandler(() -> {
+                                if (content != null && content.length() > 0) {
+                                    // Replace selection if any; else insert text
+                                    mInputLogic.mConnection.commitText(content, 1);
+                                }
+                                return false;
+                            });
+                            return kotlin.Unit.INSTANCE;
+                        },
+                        progress -> {
+                            // Optional: could show streaming UI later
+                            return kotlin.Unit.INSTANCE;
+                        }
+                );
+        controller.run(
+                action,
+                before != null ? before.toString() : "",
+                selected != null ? selected.toString() : null,
+                after != null ? after.toString() : "",
+                null,
+                null
+        );
     }
 
     @Override
@@ -1603,19 +1676,39 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
             return;
         }
 
+        // Determine if we should force-show the strip for Templates
+        org.dslul.openboard.inputmethod.latin.ai.TemplateSuggester tsForVisibility =
+                org.dslul.openboard.inputmethod.latin.ai.TemplateSuggester.INSTANCE;
+        CharSequence beforeForVisibility = mInputLogic.mConnection.getTextBeforeCursor(64, 0);
+        SuggestedWords templateSuggestionsForVisibility = tsForVisibility.suggestionsFor(beforeForVisibility, 3);
+
         final boolean shouldShowSuggestionCandidates =
                 currentSettingsValues.mInputAttributes.mShouldShowSuggestions
                         && currentSettingsValues.isSuggestionsEnabledPerUserSettings();
         final boolean shouldShowSuggestionsStripUnlessPassword = currentSettingsValues.mShowsVoiceInputKey
                 || currentSettingsValues.mShowsClipboardKey
                 || shouldShowSuggestionCandidates
-                || currentSettingsValues.isApplicationSpecifiedCompletionsOn();
+                || currentSettingsValues.isApplicationSpecifiedCompletionsOn()
+                || (templateSuggestionsForVisibility != null && !templateSuggestionsForVisibility.isEmpty());
         final boolean shouldShowSuggestionsStrip = shouldShowSuggestionsStripUnlessPassword
                 && (!currentSettingsValues.mInputAttributes.mIsPasswordField || currentSettingsValues.mShowsClipboardKey);
         mSuggestionStripView.updateVisibility(shouldShowSuggestionsStrip, isFullscreenMode());
         if (!shouldShowSuggestionsStrip) {
             return;
         }
+
+        // If templates match the last token, show them instead of normal suggestions
+        try {
+            org.dslul.openboard.inputmethod.latin.ai.TemplateSuggester ts =
+                    org.dslul.openboard.inputmethod.latin.ai.TemplateSuggester.INSTANCE;
+            CharSequence before = mInputLogic.mConnection.getTextBeforeCursor(64, 0);
+            SuggestedWords templateSuggestions = ts.suggestionsFor(before, 3);
+            if (templateSuggestions != null && !templateSuggestions.isEmpty()) {
+                mSuggestionStripView.setSuggestions(templateSuggestions,
+                        mRichImm.getCurrentSubtype().isRtlSubtype());
+                return;
+            }
+        } catch (Throwable ignored) {}
 
         final boolean isEmptyApplicationSpecifiedCompletions =
                 currentSettingsValues.isApplicationSpecifiedCompletionsOn()

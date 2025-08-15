@@ -33,6 +33,7 @@
             android:defaultToDeviceProtectedStorage="true"
             android:directBootAware="true"
             android:extractNativeLibs="false">
+        <!-- TODO: Migrate to Hilt Application and add @HiltAndroidApp when DI is introduced -->
 
         <!-- Services -->
         <service android:name="LatinIME"

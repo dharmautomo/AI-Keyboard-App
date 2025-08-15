@@ -3,13 +3,16 @@ apply plugin: 'kotlin-android'
 
 android {
     compileSdkVersion 33
+    namespace "org.dslul.openboard.inputmethod.latin"
 
     defaultConfig {
         applicationId "org.dslul.openboard.inputmethod.latin"
-        minSdkVersion 21
+        minSdkVersion 28
         targetSdkVersion 33
         versionCode 19
         versionName '1.4.5'
+        // TODO: Set your relay base URL via CI/env; never hardcode API keys in-app
+        buildConfigField "String", "KB_RELAY_BASE_URL", '""'
     }
 
     buildTypes {
@@ -56,6 +59,12 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'androidx.viewpager2:viewpager2:1.0.0'
     implementation 'org.json:json:20230227'
+
+    // AI streaming & concurrency (pin to Kotlin 1.5.x-compatible versions)
+    implementation 'com.squareup.okhttp3:okhttp:4.9.3'
+    implementation 'com.squareup.okhttp3:okhttp-sse:4.9.3'
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.2'
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.5.31"
 }
 repositories {
     mavenCentral()
