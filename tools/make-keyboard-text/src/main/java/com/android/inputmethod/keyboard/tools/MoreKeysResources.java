@@ -206,7 +206,13 @@ public class MoreKeysResources {
             final String name = mSortedResourceNames[index];
             final StringResource res = resMap.get(name);
             if (res != null) {
-                // TODO: Check whether the resource value is equal to the default.
+                // Omit entry when value equals the default locale value to minimize array size.
+                final StringResource defaultRes = mDefaultResourceMap.get(name);
+                if (defaultRes != null && res.mValue.equals(defaultRes.mValue)) {
+                    formatter.outElement("null,");
+                    successiveNull = true;
+                    continue;
+                }
                 if (res.mComment != null) {
                     formatter.outCommentLines(addPrefix("        // ", res. mComment));
                 }
