@@ -85,18 +85,16 @@ public class MoreKeysResources {
                 nameHistogram.put(res.mName, histogramValue + 1);
             }
         }
-        // Sort names list.
+        // Sort names list with deterministic tie-breaker for equal histogram values.
         Collections.sort(resourceNamesList, new Comparator<String>() {
             @Override
             public int compare(final String leftName, final String rightName) {
                 final int leftCount = nameHistogram.get(leftName);
                 final int rightCount = nameHistogram.get(rightName);
-                // Descending order of histogram count.
-                if (leftCount > rightCount) return -1;
-                if (leftCount < rightCount) return 1;
-                // TODO: Add further criteria to order the same histogram value names to be able to
-                // minimize footprints of string resources arrays.
-                return 0;
+                // Descending by histogram count; if equal, sort lexicographically by name.
+                final int byCount = Integer.compare(rightCount, leftCount);
+                if (byCount != 0) return byCount;
+                return leftName.compareTo(rightName);
             }
         });
         mSortedResourceNames = resourceNamesList.toArray(new String[resourceNamesList.size()]);
