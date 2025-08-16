@@ -25,12 +25,13 @@
             android:layout_marginEnd="8dp"
             android:paddingStart="12dp"
             android:paddingEnd="12dp"
-            android:background="@drawable/bg_ai_chip"
+            android:background="@drawable/bg_ai_chip_primary"
             android:text="@string/ai_reply"
             android:textColor="@android:color/white"
             android:textAllCaps="false"
             android:textSize="@dimen/ai_action_strip_text_size"
             android:drawableStart="@drawable/ic_ai_reply"
+            android:drawableTint="@android:color/white"
             android:drawablePadding="8dp" />
 
         <Button
@@ -48,6 +49,7 @@
             android:textAllCaps="false"
             android:textSize="@dimen/ai_action_strip_text_size"
             android:drawableStart="@drawable/ic_ai_improve"
+            android:drawableTint="@android:color/white"
             android:drawablePadding="8dp" />
 
         <Button
@@ -65,6 +67,7 @@
             android:textAllCaps="false"
             android:textSize="@dimen/ai_action_strip_text_size"
             android:drawableStart="@drawable/ic_ai_grammar"
+            android:drawableTint="@android:color/white"
             android:drawablePadding="8dp" />
 
         <Button
@@ -82,75 +85,10 @@
             android:textAllCaps="false"
             android:textSize="@dimen/ai_action_strip_text_size"
             android:drawableStart="@drawable/ic_ai_translate"
+            android:drawableTint="@android:color/white"
             android:drawablePadding="8dp" />
 
-        <Button
-            android:id="@+id/ai_btn_custom_prompt"
-            android:layout_width="wrap_content"
-            android:layout_height="36dp"
-            android:minHeight="36dp"
-            android:minWidth="0dp"
-            android:layout_marginEnd="8dp"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp"
-            android:background="@drawable/bg_ai_chip"
-            android:text="@string/ai_prompt"
-            android:textColor="@android:color/white"
-            android:textAllCaps="false"
-            android:textSize="@dimen/ai_action_strip_text_size"
-            android:drawablePadding="8dp" />
-
-        <View
-            android:layout_width="16dp"
-            android:layout_height="0dp" />
-
-        <Button
-            android:id="@+id/ai_btn_templates"
-            android:layout_width="wrap_content"
-            android:layout_height="36dp"
-            android:minHeight="36dp"
-            android:minWidth="0dp"
-            android:layout_marginEnd="8dp"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp"
-            android:background="@drawable/bg_ai_chip"
-            android:text="@string/ai_templates"
-            android:textColor="@android:color/white"
-            android:textAllCaps="false"
-            android:textSize="@dimen/ai_action_strip_text_size"
-            android:drawablePadding="8dp" />
-
-        <Button
-            android:id="@+id/ai_btn_clipboard"
-            android:layout_width="wrap_content"
-            android:layout_height="36dp"
-            android:minHeight="36dp"
-            android:minWidth="0dp"
-            android:layout_marginEnd="8dp"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp"
-            android:background="@drawable/bg_ai_chip"
-            android:text="@string/ai_clipboard"
-            android:textColor="@android:color/white"
-            android:textAllCaps="false"
-            android:textSize="@dimen/ai_action_strip_text_size"
-            android:drawablePadding="8dp" />
-
-        <Button
-            android:id="@+id/ai_btn_emoji"
-            android:layout_width="wrap_content"
-            android:layout_height="36dp"
-            android:minHeight="36dp"
-            android:minWidth="0dp"
-            android:layout_marginEnd="8dp"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp"
-            android:background="@drawable/bg_ai_chip"
-            android:text="@string/ai_emoji"
-            android:textColor="@android:color/white"
-            android:textAllCaps="false"
-            android:textSize="@dimen/ai_action_strip_text_size"
-            android:drawablePadding="8dp" />
+        <!-- Only the four AI actions to match the design -->
 
     </LinearLayout>
 

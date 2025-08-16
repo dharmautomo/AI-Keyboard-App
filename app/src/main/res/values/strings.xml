@@ -26,6 +26,10 @@
     <string name="ai_templates">Templates</string>
     <string name="ai_clipboard">Clipboard</string>
     <string name="ai_emoji">Emoji</string>
+    <string name="ai_reply">Reply</string>
+    <string name="ai_improve">Improve</string>
+    <string name="ai_grammar">Grammar</string>
+    <string name="ai_translate">Translate</string>
     <string name="english_ime_name" translatable="false">Lancar</string>
     <!-- Name of Android spell checker service. AOSP(Android Open Source Project) should not be translated.
          This resource should be copied from msgid="511950477199948048" -->
