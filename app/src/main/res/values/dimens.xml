@@ -3,4 +3,7 @@
     <!-- Increase visual weight of AI action strip buttons -->
     <dimen name="ai_action_strip_text_size">14sp</dimen>
     <dimen name="settings_screen_icon_inset">16dp</dimen>
+    <!-- Extra inset so action strip never overlaps host app input bar -->
+    <dimen name="ai_action_strip_inset_padding">6dp</dimen>
+    <!-- Note: suggestions strip height is defined in values/config.xml -->
 </resources>

@@ -1,97 +1,119 @@
 <?xml version="1.0" encoding="utf-8"?>
-<HorizontalScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/ai_action_strip_container"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:fillViewport="false"
-    android:scrollbars="none"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
     android:paddingStart="8dp"
     android:paddingEnd="8dp"
-    android:paddingTop="8dp"
-    android:paddingBottom="8dp"
+    android:paddingTop="4dp"
+    android:paddingBottom="4dp"
     android:background="#1A1A1A">
 
-    <LinearLayout
-        android:layout_width="wrap_content"
+    <HorizontalScrollView
+        android:id="@+id/ai_templates_scroll"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:layout_weight="1"
+        android:fillViewport="false"
+        android:scrollbars="none">
 
-        <Button
-            android:id="@+id/ai_btn_reply"
+        <LinearLayout
             android:layout_width="wrap_content"
-            android:layout_height="36dp"
-            android:minHeight="36dp"
-            android:minWidth="0dp"
-            android:layout_marginEnd="8dp"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp"
-            android:background="@drawable/bg_ai_chip_primary"
-            android:text="@string/ai_reply"
-            android:textColor="@android:color/white"
-            android:textAllCaps="false"
-            android:textSize="@dimen/ai_action_strip_text_size"
-            android:drawableStart="@drawable/ic_ai_reply"
-            android:drawableTint="@android:color/white"
-            android:drawablePadding="8dp" />
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
 
-        <Button
-            android:id="@+id/ai_btn_improve"
-            android:layout_width="wrap_content"
-            android:layout_height="36dp"
-            android:minHeight="36dp"
-            android:minWidth="0dp"
-            android:layout_marginEnd="8dp"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp"
-            android:background="@drawable/bg_ai_chip"
-            android:text="@string/ai_improve"
-            android:textColor="@android:color/white"
-            android:textAllCaps="false"
-            android:textSize="@dimen/ai_action_strip_text_size"
-            android:drawableStart="@drawable/ic_ai_improve"
-            android:drawableTint="@android:color/white"
-            android:drawablePadding="8dp" />
+            <Button
+                android:id="@+id/ai_btn_reply"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:minHeight="36dp"
+                android:minWidth="0dp"
+                android:layout_marginEnd="8dp"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:background="@drawable/bg_ai_chip"
+                android:text="@string/ai_reply"
+                android:textColor="@android:color/white"
+                android:textAllCaps="false"
+                android:textSize="@dimen/ai_action_strip_text_size"
+                android:drawableStart="@drawable/ic_ai_reply"
+                android:drawableTint="@android:color/white"
+                android:drawablePadding="8dp" />
 
-        <Button
-            android:id="@+id/ai_btn_grammar"
-            android:layout_width="wrap_content"
-            android:layout_height="36dp"
-            android:minHeight="36dp"
-            android:minWidth="0dp"
-            android:layout_marginEnd="8dp"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp"
-            android:background="@drawable/bg_ai_chip"
-            android:text="@string/ai_grammar"
-            android:textColor="@android:color/white"
-            android:textAllCaps="false"
-            android:textSize="@dimen/ai_action_strip_text_size"
-            android:drawableStart="@drawable/ic_ai_grammar"
-            android:drawableTint="@android:color/white"
-            android:drawablePadding="8dp" />
+            <Button
+                android:id="@+id/ai_btn_improve"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:minHeight="36dp"
+                android:minWidth="0dp"
+                android:layout_marginEnd="8dp"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:background="@drawable/bg_ai_chip"
+                android:text="@string/ai_improve"
+                android:textColor="@android:color/white"
+                android:textAllCaps="false"
+                android:textSize="@dimen/ai_action_strip_text_size"
+                android:drawableStart="@drawable/ic_ai_improve"
+                android:drawableTint="@android:color/white"
+                android:drawablePadding="8dp" />
 
-        <Button
-            android:id="@+id/ai_btn_translate"
-            android:layout_width="wrap_content"
-            android:layout_height="36dp"
-            android:minHeight="36dp"
-            android:minWidth="0dp"
-            android:layout_marginEnd="8dp"
-            android:paddingStart="12dp"
-            android:paddingEnd="12dp"
-            android:background="@drawable/bg_ai_chip"
-            android:text="@string/ai_translate"
-            android:textColor="@android:color/white"
-            android:textAllCaps="false"
-            android:textSize="@dimen/ai_action_strip_text_size"
-            android:drawableStart="@drawable/ic_ai_translate"
-            android:drawableTint="@android:color/white"
-            android:drawablePadding="8dp" />
+            <Button
+                android:id="@+id/ai_btn_grammar"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:minHeight="36dp"
+                android:minWidth="0dp"
+                android:layout_marginEnd="8dp"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:background="@drawable/bg_ai_chip"
+                android:text="@string/ai_grammar"
+                android:textColor="@android:color/white"
+                android:textAllCaps="false"
+                android:textSize="@dimen/ai_action_strip_text_size"
+                android:drawableStart="@drawable/ic_ai_grammar"
+                android:drawableTint="@android:color/white"
+                android:drawablePadding="8dp" />
 
-        <!-- Only the four AI actions to match the design -->
+            <Button
+                android:id="@+id/ai_btn_translate"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:minHeight="36dp"
+                android:minWidth="0dp"
+                android:layout_marginEnd="8dp"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:background="@drawable/bg_ai_chip"
+                android:text="@string/ai_translate"
+                android:textColor="@android:color/white"
+                android:textAllCaps="false"
+                android:textSize="@dimen/ai_action_strip_text_size"
+                android:drawableStart="@drawable/ic_ai_translate"
+                android:drawableTint="@android:color/white"
+                android:drawablePadding="8dp" />
 
-    </LinearLayout>
+            <!-- Only the four AI actions to match the design -->
 
-</HorizontalScrollView>
+        </LinearLayout>
+    </HorizontalScrollView>
+
+    <!-- Toggle button positioned at the end of the templates row; remains visible when templates hidden -->
+    <ImageButton
+        android:id="@+id/btn_toggle_ai_strip"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:layout_marginStart="4dp"
+        android:background="@drawable/bg_ai_toggle_circle"
+        android:contentDescription="@string/show_hide_action_strip"
+        android:padding="8dp"
+        android:src="@drawable/ic_chevron_up"
+        android:tint="#B3FFFFFF" />
+
+</LinearLayout>
 
 

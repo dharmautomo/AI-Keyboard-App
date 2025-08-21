@@ -49,6 +49,8 @@ android {
     kotlinOptions {
         jvmTarget = '1.8'
     }
+
+    // Use default source sets; avoid overriding Java/Kotlin roots to keep IDE classpath correct
 }
 
 dependencies {
@@ -56,15 +58,16 @@ dependencies {
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
     implementation 'androidx.recyclerview:recyclerview:1.2.1' // Replaces recyclerview:1.0.0 included by above dependency
     implementation 'androidx.core:core-ktx:1.7.0'
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    // Use Kotlin stdlib aligned with the Gradle plugin version
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
     implementation 'androidx.viewpager2:viewpager2:1.0.0'
     implementation 'org.json:json:20230227'
 
     // AI streaming & concurrency (pin to Kotlin 1.5.x-compatible versions)
     implementation 'com.squareup.okhttp3:okhttp:4.9.3'
     implementation 'com.squareup.okhttp3:okhttp-sse:4.9.3'
-    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.5.2'
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.5.31"
+    // Coroutines version compatible with Kotlin 1.9.x
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'
 }
 repositories {
     mavenCentral()

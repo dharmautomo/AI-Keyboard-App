@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Temporary KIT theme mapping to existing LXX resources. Replace drawables/colors per Figma kit. -->
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+    <style name="KeyboardTheme.KIT_Light" parent="KeyboardIcons.LXX_Light">
+        <item name="inputViewStyle">@style/InputView.LXX</item>
+        <item name="keyboardStyle">@style/Keyboard.KIT_Light</item>
+        <item name="keyboardViewStyle">@style/KeyboardView.KIT_Light</item>
+        <item name="mainKeyboardViewStyle">@style/MainKeyboardView.KIT_Light</item>
+        <item name="emojiPalettesViewStyle">@style/EmojiPalettesView.KIT_Light</item>
+        <item name="clipboardHistoryViewStyle">@style/ClipboardHistoryView.KIT_Light</item>
+        <item name="moreKeysKeyboardStyle">@style/MoreKeysKeyboard.KIT_Light</item>
+        <item name="moreKeysKeyboardViewStyle">@style/MoreKeysKeyboardView.KIT_Light</item>
+        <item name="moreKeysKeyboardViewForActionStyle">@style/MoreKeysKeyboardView.KIT_Light.Action</item>
+        <item name="suggestionStripViewStyle">@style/SuggestionStripView.KIT_Light</item>
+        <item name="suggestionWordStyle">@style/SuggestionWord.KIT_Light</item>
+    </style>
+
+    <style name="Keyboard.KIT_Light" parent="Keyboard">
+        <item name="themeId">KitLight</item>
+    </style>
+
+    <style name="KeyboardView.KIT_Light" parent="KeyboardView.LXX_Light">
+        <item name="android:background">@drawable/keyboard_background_kit_light</item>
+        <item name="keyBackground">@drawable/btn_keyboard_key_kit_light</item>
+        <item name="functionalKeyBackground">@drawable/btn_keyboard_key_functional_kit_light</item>
+        <item name="spacebarBackground">@drawable/btn_keyboard_spacebar_kit_light</item>
+        <item name="keyTextColor">@color/key_text_color_kit_light</item>
+        <item name="keyTextInactivatedColor">@color/key_text_inactive_color_kit_light</item>
+        <item name="functionalTextColor">@color/key_functional_text_color_kit_light</item>
+        <item name="keyHintLetterColor">@color/key_hint_letter_color_kit_light</item>
+        <item name="keyHintLabelColor">@color/key_text_inactive_color_kit_light</item>
+        <item name="keyShiftedLetterHintInactivatedColor">@color/key_text_inactive_color_kit_light</item>
+        <item name="keyShiftedLetterHintActivatedColor">@color/key_text_color_kit_light</item>
+        <item name="keyPreviewTextColor">@color/key_text_color_kit_light</item>
+    </style>
+
+    <style name="MainKeyboardView.KIT_Light" parent="KeyboardView.KIT_Light">
+        <item name="moreKeysKeyboardForActionLayout">@layout/more_keys_keyboard_for_action_lxx</item>
+        <item name="keyPreviewBackground">@drawable/keyboard_key_feedback_lxx_light</item>
+        <item name="keyPreviewHeight">@dimen/config_key_preview_height_lxx</item>
+        <item name="keyPreviewOffset">@dimen/config_key_preview_offset_lxx</item>
+        <item name="keyPreviewShowUpAnimator">@anim/key_preview_show_up_lxx</item>
+        <item name="keyPreviewDismissAnimator">@anim/key_preview_dismiss_lxx</item>
+        <item name="gestureFloatingPreviewTextColor">@color/auto_correct_color_lxx_light</item>
+        <item name="gestureFloatingPreviewColor">@color/gesture_floating_preview_color_lxx_light</item>
+        <item name="gestureTrailColor">@color/gesture_trail_color_lxx_light</item>
+        <item name="slidingKeyInputPreviewColor">@color/sliding_key_input_preview_color_lxx_light</item>
+        <item name="languageOnSpacebarTextColor">@color/language_on_spacebar_text_color_lxx_light</item>
+        <item name="languageOnSpacebarTextShadowRadius">-1.0</item>
+    </style>
+
+    <style name="EmojiPalettesView.KIT_Light" parent="MainKeyboardView.KIT_Light" />
+    <style name="ClipboardHistoryView.KIT_Light" parent="MainKeyboardView.KIT_Light" />
+
+    <style name="MoreKeysKeyboard.KIT_Light" parent="Keyboard.KIT_Light">
+        <item name="keyboardTopPadding">0%p</item>
+        <item name="keyboardBottomPadding">0%p</item>
+        <item name="horizontalGap">0%p</item>
+        <item name="touchPositionCorrectionData">@null</item>
+    </style>
+
+    <style name="MoreKeysKeyboardView.KIT_Light" parent="KeyboardView.KIT_Light">
+        <item name="android:background">@drawable/keyboard_popup_panel_background_lxx_light</item>
+        <item name="keyBackground">@drawable/btn_keyboard_key_popup_lxx_light</item>
+        <item name="divider">@drawable/more_keys_divider</item>
+        <item name="keyTypeface">normal</item>
+        <item name="verticalCorrection">@dimen/config_more_keys_keyboard_vertical_correction_holo</item>
+    </style>
+
+    <style name="MoreKeysKeyboardView.KIT_Light.Action" parent="MoreKeysKeyboardView.KIT_Light">
+        <item name="android:background">@android:color/transparent</item>
+        <item name="keyBackground">@drawable/btn_keyboard_key_popup_action_lxx_light</item>
+        <item name="divider">@null</item>
+        <item name="keyLabelFlags">keepBackgroundAspectRatio</item>
+    </style>
+
+    <style name="SuggestionStripView.KIT_Light" parent="KeyboardView.KIT_Light">
+        <item name="android:background">@drawable/keyboard_suggest_strip_lxx_light</item>
+        <item name="android:src">@drawable/suggestions_strip_divider_lxx_light</item>
+        <item name="suggestionStripOptions">autoCorrectBold|validTypedWordBold</item>
+        <item name="colorValidTypedWord">@color/typed_word_color_lxx_light</item>
+        <item name="colorTypedWord">@color/typed_word_color_lxx_light</item>
+        <item name="colorAutoCorrect">@color/auto_correct_color_lxx_light</item>
+        <item name="colorSuggested">@color/suggested_word_color_lxx_light</item>
+        <item name="alphaObsoleted">70%</item>
+    </style>
+
+    <style name="SuggestionWord.KIT_Light" parent="SuggestionWord">
+        <item name="android:background">@drawable/btn_suggestion_lxx_light</item>
+        <item name="android:textColor">@color/highlight_color_lxx_light</item>
+    </style>
+
+    <!-- Dark -->
+    <style name="KeyboardTheme.KIT_Dark" parent="KeyboardIcons.LXX_Dark">
+        <item name="inputViewStyle">@style/InputView.LXX</item>
+        <item name="keyboardStyle">@style/Keyboard.KIT_Dark</item>
+        <item name="keyboardViewStyle">@style/KeyboardView.KIT_Dark</item>
+        <item name="mainKeyboardViewStyle">@style/MainKeyboardView.KIT_Dark</item>
+        <item name="emojiPalettesViewStyle">@style/EmojiPalettesView.KIT_Dark</item>
+        <item name="clipboardHistoryViewStyle">@style/ClipboardHistoryView.KIT_Dark</item>
+        <item name="moreKeysKeyboardStyle">@style/MoreKeysKeyboard.KIT_Dark</item>
+        <item name="moreKeysKeyboardViewStyle">@style/MoreKeysKeyboardView.KIT_Dark</item>
+        <item name="moreKeysKeyboardViewForActionStyle">@style/MoreKeysKeyboardView.KIT_Dark.Action</item>
+        <item name="suggestionStripViewStyle">@style/SuggestionStripView.KIT_Dark</item>
+        <item name="suggestionWordStyle">@style/SuggestionWord.KIT_Dark</item>
+    </style>
+
+    <style name="Keyboard.KIT_Dark" parent="Keyboard">
+        <item name="themeId">KitDark</item>
+    </style>
+
+    <style name="KeyboardView.KIT_Dark" parent="KeyboardView.LXX_Dark">
+        <item name="android:background">@drawable/keyboard_background_kit_dark</item>
+        <item name="keyBackground">@drawable/btn_keyboard_key_kit_dark</item>
+        <item name="functionalKeyBackground">@drawable/btn_keyboard_key_functional_kit_dark</item>
+        <item name="spacebarBackground">@drawable/btn_keyboard_spacebar_kit_dark</item>
+        <item name="keyTextColor">@color/key_text_color_kit_dark</item>
+        <item name="keyTextInactivatedColor">@color/key_text_inactive_color_kit_dark</item>
+        <item name="functionalTextColor">@color/key_functional_text_color_kit_dark</item>
+        <item name="keyHintLetterColor">@color/key_hint_letter_color_kit_dark</item>
+        <item name="keyHintLabelColor">@color/key_text_inactive_color_kit_dark</item>
+        <item name="keyShiftedLetterHintInactivatedColor">@color/key_text_inactive_color_kit_dark</item>
+        <item name="keyShiftedLetterHintActivatedColor">@color/key_text_color_kit_dark</item>
+        <item name="keyPreviewTextColor">@color/key_text_color_kit_dark</item>
+    </style>
+
+    <style name="MainKeyboardView.KIT_Dark" parent="KeyboardView.KIT_Dark">
+        <item name="moreKeysKeyboardForActionLayout">@layout/more_keys_keyboard_for_action_lxx</item>
+        <item name="keyPreviewBackground">@drawable/keyboard_key_feedback_lxx_dark</item>
+        <item name="keyPreviewHeight">@dimen/config_key_preview_height_lxx</item>
+        <item name="keyPreviewOffset">@dimen/config_key_preview_offset_lxx</item>
+        <item name="keyPreviewShowUpAnimator">@anim/key_preview_show_up_lxx</item>
+        <item name="keyPreviewDismissAnimator">@anim/key_preview_dismiss_lxx</item>
+        <item name="gestureFloatingPreviewTextColor">@color/auto_correct_color_lxx_dark</item>
+        <item name="gestureFloatingPreviewColor">@color/gesture_floating_preview_color_lxx_dark</item>
+        <item name="gestureTrailColor">@color/gesture_trail_color_lxx_dark</item>
+        <item name="slidingKeyInputPreviewColor">@color/sliding_key_input_preview_color_lxx_dark</item>
+        <item name="languageOnSpacebarTextColor">@color/key_text_inactive_color_lxx_dark</item>
+        <item name="languageOnSpacebarTextShadowRadius">-1.0</item>
+    </style>
+
+    <style name="EmojiPalettesView.KIT_Dark" parent="MainKeyboardView.KIT_Dark" />
+    <style name="ClipboardHistoryView.KIT_Dark" parent="MainKeyboardView.KIT_Dark" />
+
+    <style name="MoreKeysKeyboard.KIT_Dark" parent="Keyboard.KIT_Dark">
+        <item name="keyboardTopPadding">0%p</item>
+        <item name="keyboardBottomPadding">0%p</item>
+        <item name="horizontalGap">0%p</item>
+        <item name="touchPositionCorrectionData">@null</item>
+    </style>
+
+    <style name="MoreKeysKeyboardView.KIT_Dark" parent="KeyboardView.KIT_Dark">
+        <item name="android:background">@drawable/keyboard_popup_panel_background_lxx_dark</item>
+        <item name="keyBackground">@drawable/btn_keyboard_key_popup_lxx_dark</item>
+        <item name="divider">@drawable/more_keys_divider</item>
+        <item name="keyTypeface">normal</item>
+        <item name="verticalCorrection">@dimen/config_more_keys_keyboard_vertical_correction_holo</item>
+    </style>
+
+    <style name="MoreKeysKeyboardView.KIT_Dark.Action" parent="MoreKeysKeyboardView.KIT_Dark">
+        <item name="android:background">@android:color/transparent</item>
+        <item name="keyBackground">@drawable/btn_keyboard_key_popup_action_lxx_dark</item>
+        <item name="divider">@null</item>
+        <item name="keyLabelFlags">keepBackgroundAspectRatio</item>
+    </style>
+
+    <style name="SuggestionStripView.KIT_Dark" parent="KeyboardView.KIT_Dark">
+        <item name="android:background">@drawable/keyboard_suggest_strip_lxx_dark</item>
+        <item name="android:src">@drawable/suggestions_strip_divider_lxx_dark</item>
+        <item name="suggestionStripOptions">autoCorrectBold|validTypedWordBold</item>
+        <item name="colorValidTypedWord">@color/typed_word_color_lxx_dark</item>
+        <item name="colorTypedWord">@color/typed_word_color_lxx_dark</item>
+        <item name="colorAutoCorrect">@color/auto_correct_color_lxx_dark</item>
+        <item name="colorSuggested">@color/suggested_word_color_lxx_dark</item>
+        <item name="alphaObsoleted">70%</item>
+    </style>
+
+    <style name="SuggestionWord.KIT_Dark" parent="SuggestionWord">
+        <item name="android:background">@drawable/btn_suggestion_lxx_dark</item>
+        <item name="android:textColor">@color/highlight_color_lxx_dark</item>
+    </style>
+</resources>
+
+

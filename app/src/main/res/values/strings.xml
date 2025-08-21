@@ -22,14 +22,11 @@
     <string name="ai_improve">Improve</string>
     <string name="ai_grammar">Grammar</string>
     <string name="ai_translate">Translate</string>
+    <string name="show_hide_action_strip">Show or hide action strip</string>
     <string name="ai_prompt">Prompt</string>
     <string name="ai_templates">Templates</string>
     <string name="ai_clipboard">Clipboard</string>
     <string name="ai_emoji">Emoji</string>
-    <string name="ai_reply">Reply</string>
-    <string name="ai_improve">Improve</string>
-    <string name="ai_grammar">Grammar</string>
-    <string name="ai_translate">Translate</string>
     <string name="english_ime_name" translatable="false">Lancar</string>
     <!-- Name of Android spell checker service. AOSP(Android Open Source Project) should not be translated.
          This resource should be copied from msgid="511950477199948048" -->
@@ -318,7 +315,7 @@ this keyboard, so users of other scripts should understand when they read this t
 keyboard that is meant for them to be able to enter Latin characters as opposed to the script they
 are used to. This keyboard does not provide a dictionary, and it is not tied to any specific
 language among those that use the Latin alphabet. This keyboard is laid out in the QWERTY
-disposition rather than other common dispositions for Latin languages. [CHAR LIMIT=25] -->
+position rather than other common dispositions for Latin languages. [CHAR LIMIT=25] -->
     <string name="subtype_no_language_qwerty">Alphabet (QWERTY)</string>
     <!-- This string is displayed in the description for a keyboard type. It refers specifically to
 the Latin alphabet, as opposed to Cyrillic, Arabic, Hebrew or other scripts.
@@ -329,7 +326,7 @@ this keyboard, so users of other scripts should understand when they read this t
 keyboard that is meant for them to be able to enter Latin characters as opposed to the script they
 are used to. This keyboard does not provide a dictionary, and it is not tied to any specific
 language among those that use the Latin alphabet. This keyboard is laid out in the QWERTZ
-disposition rather than other common dispositions for Latin languages. [CHAR LIMIT=25] -->
+position rather than other common dispositions for Latin languages. [CHAR LIMIT=25] -->
     <string name="subtype_no_language_qwertz">Alphabet (QWERTZ)</string>
     <!-- This string is displayed in the description for a keyboard type. It refers specifically to
 the Latin alphabet, as opposed to Cyrillic, Arabic, Hebrew or other scripts.
@@ -340,7 +337,7 @@ this keyboard, so users of other scripts should understand when they read this t
 keyboard that is meant for them to be able to enter Latin characters as opposed to the script they
 are used to. This keyboard does not provide a dictionary, and it is not tied to any specific
 language among those that use the Latin alphabet. This keyboard is laid out in the AZERTY
-disposition rather than other common dispositions for Latin languages. [CHAR LIMIT=25] -->
+position rather than other common dispositions for Latin languages. [CHAR LIMIT=25] -->
     <string name="subtype_no_language_azerty">Alphabet (AZERTY)</string>
     <!-- This string is displayed in the description for a keyboard type. It refers specifically to
 the Latin alphabet, as opposed to Cyrillic, Arabic, Hebrew or other scripts.
@@ -351,7 +348,7 @@ this keyboard, so users of other scripts should understand when they read this t
 keyboard that is meant for them to be able to enter Latin characters as opposed to the script they
 are used to. This keyboard does not provide a dictionary, and it is not tied to any specific
 language among those that use the Latin alphabet. This keyboard is laid out in the Dvorak
-disposition rather than other common dispositions for Latin languages. [CHAR LIMIT=25] -->
+position rather than other common dispositions for Latin languages. [CHAR LIMIT=25] -->
     <string name="subtype_no_language_dvorak">Alphabet (Dvorak)</string>
     <!-- This string is displayed in the description for a keyboard type. It refers specifically to
 the Latin alphabet, as opposed to Cyrillic, Arabic, Hebrew or other scripts.
@@ -362,7 +359,7 @@ this keyboard, so users of other scripts should understand when they read this t
 keyboard that is meant for them to be able to enter Latin characters as opposed to the script they
 are used to. This keyboard does not provide a dictionary, and it is not tied to any specific
 language among those that use the Latin alphabet. This keyboard is laid out in the Colemak
-disposition rather than other common dispositions for Latin languages. [CHAR LIMIT=25] -->
+position rather than other common dispositions for Latin languages. [CHAR LIMIT=25] -->
     <string name="subtype_no_language_colemak">Alphabet (Colemak)</string>
     <!-- This string is displayed in the description for a keyboard type. It refers specifically to
 the Latin alphabet, as opposed to Cyrillic, Arabic, Hebrew or other scripts.
@@ -373,7 +370,7 @@ this keyboard, so users of other scripts should understand when they read this t
 keyboard that is meant for them to be able to enter Latin characters as opposed to the script they
 are used to. This keyboard does not provide a dictionary, and it is not tied to any specific
 language among those that use the Latin alphabet. This keyboard is laid out in the QWERTY PC
-disposition that offers additional keys, but smaller keys compared to other common dispositions for
+position that offers additional keys, but smaller keys compared to other common dispositions for
 mobile devices. [CHAR LIMIT=25] -->
     <string name="subtype_no_language_colemak_dh">Alphabet (Colemak Mod-DH)</string>
     <!-- This string is displayed in the description for a keyboard type. It refers specifically to
@@ -385,7 +382,7 @@ this keyboard, so users of other scripts should understand when they read this t
 keyboard that is meant for them to be able to enter Latin characters as opposed to the script they
 are used to. This keyboard does not provide a dictionary, and it is not tied to any specific
 language among those that use the Latin alphabet. This keyboard is laid out in the Workman
-disposition rather than other common dispositions for Latin languages. [CHAR LIMIT=25] -->
+position rather than other common dispositions for Latin languages. [CHAR LIMIT=25] -->
     <string name="subtype_no_language_workman">Alphabet (Workman)</string>
     <string name="subtype_no_language_pcqwerty">Alphabet (PC)</string>
     <!-- Description for Emoji keyboard subtype [CHAR LIMIT=25] -->
@@ -460,13 +457,13 @@ disposition rather than other common dispositions for Latin languages. [CHAR LIM
     <string name="setup_step3_title">"Congratulations, you're all set!"</string>
     <!-- Detailed instruction of the 3rd step in the setup wizard. [CHAR LIMIT=120] -->
     <string name="setup_step3_instruction">Now you can type in all your favorite apps with <xliff:g id="APPLICATION_NAME" example="Android Keyboard">%s</xliff:g>.</string>
-    <!-- The label of the button that triggers the screen for configuaring additional languages of the keyboard. [CHAR_LIMIT=64] -->
+    <!-- The label of the button that triggers the screen for configuaring additional languages of the keyboard. [CHAR LIMIT=64] -->
     <string name="setup_step3_action">Configure additional languages</string>
-    <!-- The label of the button that finishes the setup wizard. [CHAR_LIMIT=64] -->
+    <!-- The label of the button that finishes the setup wizard. [CHAR LIMIT=64] -->
     <string name="setup_finish_action">Finished</string>
     <!-- Option to show setup wizard icon. [CHAR LIMIT=30]-->
     <string name="show_setup_wizard_icon">Show app icon</string>
-    <!-- Description for the option to show setup wizard application icon of this IME in the laucher. [CHAR_LIMIT=65] -->
+    <!-- Description for the option to show setup wizard application icon of this IME in the laucher. [CHAR LIMIT=65] -->
     <string name="show_setup_wizard_icon_summary">Display application icon in the launcher</string>
     <!-- The dictionary provider application name. Visible in Settings/Applications/Manage applications. -->
     <string name="app_name">Dictionary Provider</string>
@@ -496,7 +493,7 @@ disposition rather than other common dispositions for Latin languages. [CHAR LIM
     <string name="cannot_connect_to_dict_service">Problem connecting to dictionary service</string>
     <!-- Message to display in the dictionaries setting screen when we found that no dictionaries are available [CHAR LIMIT=20]-->
     <string name="no_dictionaries_available">No dictionaries available</string>
-    <!-- Title of the options to press to refresh the list (as in, check for updates now) [CHAR_LIMIT=50] -->
+    <!-- Title of the options to press to refresh the list (as in, check for updates now) [CHAR LIMIT=50] -->
     <string name="check_for_updates_now">Refresh</string>
     <!-- Hint to tell when the data was last updated. Usage : "Last updated [date]", may contain a : or so. [CHAR LIMIT=45] -->
     <string name="last_update">Last updated</string>

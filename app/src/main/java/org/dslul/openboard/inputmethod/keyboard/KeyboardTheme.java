@@ -66,9 +66,14 @@ public final class KeyboardTheme implements Comparable<KeyboardTheme> {
     public static final int THEME_ID_LXX_DARK = 7;
     public static final int THEME_ID_LXX_AUTO = 9;
     public static final int THEME_ID_LXX_AUTO_BORDER = 8;
+    public static final int THEME_ID_KIT_LIGHT = 11;
+    public static final int THEME_ID_KIT_DARK = 12;
     public static final int DEFAULT_THEME_ID = THEME_ID_LXX_DARK_BORDER;
 
     private static KeyboardTheme[] AVAILABLE_KEYBOARD_THEMES;
+
+    // Fast lookup for the default theme array
+    private static final Map<Integer, KeyboardTheme> THEME_ID_INDEX = new HashMap<>();
 
     /* package private for testing */
     static final KeyboardTheme[] KEYBOARD_THEMES = {
@@ -102,11 +107,18 @@ public final class KeyboardTheme implements Comparable<KeyboardTheme> {
         new KeyboardTheme(THEME_ID_LXX_AUTO_AMOLED, "LXXAutoAmoled", R.style.KeyboardTheme_LXX_Auto_Amoled,
                 // This has never been selected as default theme.
                 VERSION_CODES.LOLLIPOP),
+        new KeyboardTheme(THEME_ID_KIT_LIGHT, "KitLight", R.style.KeyboardTheme_KIT_Light,
+                VERSION_CODES.BASE),
+        new KeyboardTheme(THEME_ID_KIT_DARK, "KitDark", R.style.KeyboardTheme_KIT_Dark,
+                VERSION_CODES.BASE),
     };
 
     static {
         // Sort {@link #KEYBOARD_THEME} by descending order of {@link #mMinApiVersion}.
         Arrays.sort(KEYBOARD_THEMES);
+        for (final KeyboardTheme theme : KEYBOARD_THEMES) {
+            THEME_ID_INDEX.put(theme.mThemeId, theme);
+        }
     }
 
     public final int mThemeId;
@@ -145,7 +157,11 @@ public final class KeyboardTheme implements Comparable<KeyboardTheme> {
     /* package private for testing */
     static KeyboardTheme searchKeyboardThemeById(final int themeId,
             final KeyboardTheme[] availableThemeIds) {
-        // TODO: This search algorithm isn't optimal if there are many themes.
+        // Use the prebuilt index when searching the default theme array
+        if (availableThemeIds == KEYBOARD_THEMES) {
+            return THEME_ID_INDEX.get(themeId);
+        }
+        // Fallback to linear scan for custom arrays
         for (final KeyboardTheme theme : availableThemeIds) {
             if (theme.mThemeId == themeId) {
                 return theme;
@@ -176,13 +192,40 @@ public final class KeyboardTheme implements Comparable<KeyboardTheme> {
             Log.i(TAG, "Remove KLP keyboard theme preference: " + klpThemeIdString);
             prefs.edit().remove(KLP_KEYBOARD_THEME_KEY).apply();
         }
-        // TODO: This search algorithm isn't optimal if there are many themes.
-        for (final KeyboardTheme theme : availableThemeArray) {
-            if (sdkVersion >= theme.mMinApiVersion) {
-                return theme;
-            }
+        // Use binary search over a sorted copy to efficiently find the best theme
+        final KeyboardTheme bestTheme = findBestThemeForSdkVersion(sdkVersion, availableThemeArray);
+        if (bestTheme != null) {
+            return bestTheme;
         }
         return searchKeyboardThemeById(DEFAULT_THEME_ID, availableThemeArray);
+    }
+
+    private static KeyboardTheme findBestThemeForSdkVersion(final int sdkVersion,
+            final KeyboardTheme[] availableThemeArray) {
+        if (availableThemeArray == null || availableThemeArray.length == 0) {
+            return null;
+        }
+        // Work on a sorted copy to avoid mutating caller's array. Sort order is descending
+        // by min API as defined by compareTo.
+        final KeyboardTheme[] sorted = availableThemeArray.clone();
+        Arrays.sort(sorted);
+
+        int low = 0;
+        int high = sorted.length - 1;
+        int resultIndex = -1;
+        while (low <= high) {
+            final int mid = (low + high) >>> 1;
+            final int midMinApi = sorted[mid].mMinApiVersion;
+            if (midMinApi <= sdkVersion) {
+                // Candidate found. Try to find an even better (earlier) match on the left.
+                resultIndex = mid;
+                high = mid - 1;
+            } else {
+                // Need a theme that supports an even higher API; move right in descending order.
+                low = mid + 1;
+            }
+        }
+        return resultIndex >= 0 ? sorted[resultIndex] : null;
     }
 
     public static String getKeyboardThemeName(final int themeId) {
@@ -243,6 +286,10 @@ public final class KeyboardTheme implements Comparable<KeyboardTheme> {
 
     public static String getThemeVariant(int themeId) {
         switch (themeId) {
+            case THEME_ID_KIT_DARK:
+                return THEME_VARIANT_DARK;
+            case THEME_ID_KIT_LIGHT:
+                return THEME_VARIANT_LIGHT;
             case THEME_ID_LXX_DARK:
             case THEME_ID_LXX_DARK_AMOLED:
             case THEME_ID_LXX_DARK_BORDER:
@@ -261,6 +308,9 @@ public final class KeyboardTheme implements Comparable<KeyboardTheme> {
 
     public static boolean getHasKeyBorders(int themeId) {
         switch (themeId) {
+            case THEME_ID_KIT_LIGHT:
+            case THEME_ID_KIT_DARK:
+                return false;
             case THEME_ID_LXX_DARK_BORDER:
             case THEME_ID_LXX_LIGHT_BORDER:
             case THEME_ID_LXX_AUTO_BORDER:
@@ -299,6 +349,7 @@ public final class KeyboardTheme implements Comparable<KeyboardTheme> {
             if (THEME_VARIANT_BLUE.equals(variant)) return THEME_ID_ICS;
             return THEME_ID_KLP;
         }
+        // Material family
         if (dayNight) {
             if (keyBorders) return THEME_ID_LXX_AUTO_BORDER;
             if (amoledMode) return THEME_ID_LXX_AUTO_AMOLED;
@@ -307,9 +358,11 @@ public final class KeyboardTheme implements Comparable<KeyboardTheme> {
         if (THEME_VARIANT_DARK.equals(variant)) {
             if (keyBorders) return THEME_ID_LXX_DARK_BORDER;
             if (amoledMode) return THEME_ID_LXX_DARK_AMOLED;
-            return THEME_ID_LXX_DARK;
+            // Use KIT dark when no borders and no amoled/dayNight
+            return THEME_ID_KIT_DARK;
         }
         if (keyBorders) return THEME_ID_LXX_LIGHT_BORDER;
-        return THEME_ID_LXX_LIGHT;
+        // Use KIT light when no borders and no dayNight
+        return THEME_ID_KIT_LIGHT;
     }
 }

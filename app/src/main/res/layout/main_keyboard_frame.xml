@@ -25,12 +25,18 @@
     android:layout_gravity="bottom"
     android:orientation="vertical" >
 
-    <!-- AI action strip at the very top, separate from keyboard -->
-    <include
-        android:id="@+id/ai_action_strip"
-        layout="@layout/ai_action_strip"
+    <!-- AI action strip at the very top with toggle overlay -->
+    <FrameLayout
+        android:id="@+id/ai_action_strip_container"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content">
+        <include
+            android:id="@+id/ai_action_strip"
+            layout="@layout/ai_action_strip"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="visible" />
+    </FrameLayout>
 
     <!-- Separator between AI strip and keyboard area -->
     <View
@@ -45,7 +51,8 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
         android:orientation="vertical"
-        android:paddingTop="8dp" >
+        android:paddingTop="4dp"
+        android:paddingBottom="4dp" >
 
         <!-- To ensure that key preview popup is correctly placed when the current system locale is
              one of RTL locales, layoutDirection="ltr" is needed in the SDK version 17+. -->

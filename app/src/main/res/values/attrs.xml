@@ -245,6 +245,8 @@
             <enum name="LXXLightBorder" value="5" />
             <enum name="LXXDarkBorder" value="6" />
             <enum name="LXXAutoBorder" value="8" />
+            <enum name="KitLight" value="11" />
+            <enum name="KitDark" value="12" />
         </attr>
         <!-- Touch position correction -->
         <attr name="touchPositionCorrectionData" format="reference" />

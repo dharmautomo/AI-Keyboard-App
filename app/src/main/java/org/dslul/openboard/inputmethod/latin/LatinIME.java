@@ -849,18 +849,26 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
             btnTranslate.setOnClickListener(v -> onAiAction(org.dslul.openboard.inputmethod.latin.ai.AiProvider.Action.TRANSLATE));
         }
 
-        final View btnEmoji = view.findViewById(R.id.ai_btn_emoji);
-        if (btnEmoji != null) {
-            btnEmoji.setOnClickListener(v ->
-                    mKeyboardSwitcher.onToggleKeyboard(
-                            org.dslul.openboard.inputmethod.keyboard.KeyboardSwitcher.KeyboardSwitchState.EMOJI));
+        // Toggle action strip visibility
+        final View toggleBtn = view.findViewById(R.id.btn_toggle_ai_strip);
+        final View aiStripContainer = view.findViewById(R.id.ai_action_strip_container);
+        final View aiTemplates = view.findViewById(R.id.ai_templates_scroll);
+        if (toggleBtn != null && aiStripContainer != null && aiTemplates != null) {
+            toggleBtn.setOnClickListener(v -> {
+                final boolean showing = aiTemplates.getVisibility() == View.VISIBLE;
+                aiTemplates.setVisibility(showing ? View.GONE : View.VISIBLE);
+                // Update toggle icon
+                if (toggleBtn instanceof android.widget.ImageButton) {
+                    ((android.widget.ImageButton) toggleBtn).setImageResource(
+                            showing ? R.drawable.ic_chevron_down : R.drawable.ic_chevron_up);
+                }
+                // Recompute insets when strip visibility changes
+                final InputMethodService.Insets insets = new InputMethodService.Insets();
+                onComputeInsets(insets);
+            });
         }
-        final View btnClipboard = view.findViewById(R.id.ai_btn_clipboard);
-        if (btnClipboard != null) {
-            btnClipboard.setOnClickListener(v ->
-                    mKeyboardSwitcher.onToggleKeyboard(
-                            org.dslul.openboard.inputmethod.keyboard.KeyboardSwitcher.KeyboardSwitchState.CLIPBOARD));
-        }
+
+        // Emoji and Clipboard buttons were removed from the strip for the new design
         final View btnGrammar = view.findViewById(R.id.ai_btn_grammar);
         if (btnGrammar != null) {
             btnGrammar.setOnClickListener(v -> onAiAction(org.dslul.openboard.inputmethod.latin.ai.AiProvider.Action.GRAMMAR));
@@ -1316,7 +1324,23 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
                 && !mKeyboardSwitcher.isShowingClipboardHistory()
                 && mSuggestionStripView.getVisibility() == View.VISIBLE)
                 ? mSuggestionStripView.getHeight() : 0;
-        final int visibleTopY = inputHeight - visibleKeyboardView.getHeight() - suggestionsHeight;
+        // Include AI action strip height so it doesn't cover the host app's input field.
+        int aiStripHeight = 0;
+        final View aiStrip = mInputView.findViewById(R.id.ai_action_strip);
+        int aiStripExtraInset = 0;
+        if (aiStrip != null && aiStrip.getVisibility() == View.VISIBLE) {
+            aiStripHeight = aiStrip.getHeight();
+            // Add a small safety padding so the host app's input bar is never obscured.
+            aiStripExtraInset = getResources().getDimensionPixelSize(
+                    org.dslul.openboard.inputmethod.latin.R.dimen.ai_action_strip_inset_padding);
+        }
+        int visibleTopY = inputHeight - visibleKeyboardView.getHeight()
+                - suggestionsHeight - aiStripHeight - aiStripExtraInset;
+        if (visibleTopY < 0) {
+            visibleTopY = 0;
+        } else if (visibleTopY > inputHeight) {
+            visibleTopY = inputHeight;
+        }
         mSuggestionStripView.setMoreSuggestionsHeight(visibleTopY);
         // Need to set expanded touchable region only if a keyboard view is being shown.
         if (visibleKeyboardView.isShown()) {
