@@ -12,6 +12,7 @@ import okhttp3.sse.EventSourceListener
 import okhttp3.sse.EventSources
 import org.dslul.openboard.inputmethod.latin.BuildConfig
 import org.json.JSONObject
+import android.util.Log
 
 /**
  * Provider that talks to a secure relay exposing OpenAI-compatible SSE streaming.
@@ -20,6 +21,10 @@ import org.json.JSONObject
 class AiProviderOpenAI(
     private val httpClient: OkHttpClient = OkHttpClient()
 ) : AiProvider {
+
+    companion object {
+        private const val TAG = "AiProviderOpenAI"
+    }
 
     private fun actionToInstruction(action: AiProvider.Action, targetLanguage: String?, custom: String?): String {
         return when (action) {
@@ -33,7 +38,25 @@ class AiProviderOpenAI(
 
     override fun stream(request: AiProvider.Request): Flow<AiProvider.StreamChunk> = callbackFlow {
         val relay = BuildConfig.KB_RELAY_BASE_URL
-        require(relay.isNotBlank()) { "KB_RELAY_BASE_URL is empty" }
+        
+        // Check if relay URL is available
+        if (relay.isBlank()) {
+            Log.w(TAG, "KB_RELAY_BASE_URL is empty, AI features are disabled")
+            // Return empty result instead of crashing
+            trySend(AiProvider.StreamChunk(content = "AI features are currently disabled. Please configure KB_RELAY_BASE_URL.", isDone = true))
+            close()
+            return@callbackFlow
+        }
+
+        // Check if this is a dummy URL (for development/testing)
+        if (relay.contains("httpbin.org") || relay.contains("example.com") || relay.contains("dummy")) {
+            Log.i(TAG, "Using dummy URL for development: $relay")
+            // Return a mock response for development
+            val mockResponse = generateMockResponse(request.action, request.selectedText ?: request.textBeforeCursor)
+            trySend(AiProvider.StreamChunk(content = mockResponse, isDone = true))
+            close()
+            return@callbackFlow
+        }
 
         val before = request.textBeforeCursor.takeLast(request.truncateAtChars)
         val after = request.textAfterCursor.take(request.truncateAtChars)
@@ -76,12 +99,43 @@ class AiProviderOpenAI(
             }
 
             override fun onFailure(eventSource: EventSource, t: Throwable?, response: okhttp3.Response?) {
+                Log.e(TAG, "AI request failed", t)
+                // Send error message instead of crashing
+                trySend(AiProvider.StreamChunk(content = "Sorry, AI service is currently unavailable. Please try again later.", isDone = true))
                 close(t)
             }
         }
 
         val es = EventSources.createFactory(httpClient).newEventSource(req, listener)
         awaitClose { es.cancel() }
+    }
+
+    private fun generateMockResponse(action: AiProvider.Action, text: String): String {
+        return when (action) {
+            AiProvider.Action.GRAMMAR -> {
+                if (text.isNotBlank()) {
+                    "This is a mock grammar correction for: \"$text\". In a real implementation, this would be the corrected text."
+                } else {
+                    "Mock grammar correction: Please provide some text to correct."
+                }
+            }
+            AiProvider.Action.IMPROVE -> {
+                if (text.isNotBlank()) {
+                    "This is a mock improvement for: \"$text\". In a real implementation, this would be the improved version."
+                } else {
+                    "Mock improvement: Please provide some text to improve."
+                }
+            }
+            AiProvider.Action.REPLY -> {
+                "This is a mock reply. In a real implementation, this would be an AI-generated response based on the context."
+            }
+            AiProvider.Action.TRANSLATE -> {
+                "This is a mock translation. In a real implementation, this would be the translated text."
+            }
+            AiProvider.Action.CUSTOM -> {
+                "This is a mock custom response. In a real implementation, this would be based on your custom prompt."
+            }
+        }
     }
 }
 

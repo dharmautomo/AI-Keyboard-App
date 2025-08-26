@@ -876,45 +876,70 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
     }
 
     private void onAiAction(final org.dslul.openboard.inputmethod.latin.ai.AiProvider.Action action) {
-        // Guardrails: don't process password/private fields
-        final SettingsValues sv = mSettings.getCurrent();
-        if (sv != null && sv.mInputAttributes != null && sv.mInputAttributes.mIsPasswordField) {
-            android.widget.Toast.makeText(this, R.string.subtype_no_language, android.widget.Toast.LENGTH_SHORT).show();
-            return;
+        try {
+            // Guardrails: don't process password/private fields
+            final SettingsValues sv = mSettings.getCurrent();
+            if (sv != null && sv.mInputAttributes != null && sv.mInputAttributes.mIsPasswordField) {
+                android.widget.Toast.makeText(this, R.string.subtype_no_language, android.widget.Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // Check if AI features are available
+            String relayUrl = org.dslul.openboard.inputmethod.latin.BuildConfig.KB_RELAY_BASE_URL;
+            if (relayUrl == null || relayUrl.trim().isEmpty()) {
+                android.widget.Toast.makeText(this, "AI features are currently disabled", android.widget.Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // Check if this is a dummy URL for development
+            boolean isDummyUrl = relayUrl.contains("httpbin.org") || relayUrl.contains("example.com") || relayUrl.contains("dummy");
+            if (isDummyUrl) {
+                Log.i(TAG, "Using AI features with dummy URL for development: " + relayUrl);
+            }
+
+            CharSequence before = mInputLogic.mConnection.getTextBeforeCursor(2048, 0);
+            CharSequence after = mInputLogic.mConnection.getTextAfterCursor(2048, 0);
+            CharSequence selected = mInputLogic.mConnection.getSelectedText(0);
+
+            // Bridge to Kotlin controller
+            org.dslul.openboard.inputmethod.latin.ai.AiActionController controller =
+                    new org.dslul.openboard.inputmethod.latin.ai.AiActionController(
+                            new org.dslul.openboard.inputmethod.latin.ai.AiProviderOpenAI(),
+                            content -> {
+                                // Commit result on main thread
+                                getMainLooper().getQueue().addIdleHandler(() -> {
+                                    if (content != null && content.length() > 0) {
+                                        // Replace selection if any; else insert text
+                                        mInputLogic.mConnection.commitText(content, 1);
+                                        
+                                        // Show toast for dummy URL usage
+                                        if (isDummyUrl) {
+                                            android.widget.Toast.makeText(LatinIME.this, 
+                                                "AI Demo Mode - This is a mock response", 
+                                                android.widget.Toast.LENGTH_SHORT).show();
+                                        }
+                                    }
+                                    return false;
+                                });
+                                return kotlin.Unit.INSTANCE;
+                            },
+                            progress -> {
+                                // Optional: could show streaming UI later
+                                return kotlin.Unit.INSTANCE;
+                            }
+                    );
+            controller.run(
+                    action,
+                    before != null ? before.toString() : "",
+                    selected != null ? selected.toString() : null,
+                    after != null ? after.toString() : "",
+                    null,
+                    null
+            );
+        } catch (Exception e) {
+            Log.e(TAG, "Error in AI action: " + action, e);
+            android.widget.Toast.makeText(this, "AI feature error: " + e.getMessage(), android.widget.Toast.LENGTH_SHORT).show();
         }
-
-        CharSequence before = mInputLogic.mConnection.getTextBeforeCursor(2048, 0);
-        CharSequence after = mInputLogic.mConnection.getTextAfterCursor(2048, 0);
-        CharSequence selected = mInputLogic.mConnection.getSelectedText(0);
-
-        // Bridge to Kotlin controller
-        org.dslul.openboard.inputmethod.latin.ai.AiActionController controller =
-                new org.dslul.openboard.inputmethod.latin.ai.AiActionController(
-                        new org.dslul.openboard.inputmethod.latin.ai.AiProviderOpenAI(),
-                        content -> {
-                            // Commit result on main thread
-                            getMainLooper().getQueue().addIdleHandler(() -> {
-                                if (content != null && content.length() > 0) {
-                                    // Replace selection if any; else insert text
-                                    mInputLogic.mConnection.commitText(content, 1);
-                                }
-                                return false;
-                            });
-                            return kotlin.Unit.INSTANCE;
-                        },
-                        progress -> {
-                            // Optional: could show streaming UI later
-                            return kotlin.Unit.INSTANCE;
-                        }
-                );
-        controller.run(
-                action,
-                before != null ? before.toString() : "",
-                selected != null ? selected.toString() : null,
-                after != null ? after.toString() : "",
-                null,
-                null
-        );
     }
 
     @Override

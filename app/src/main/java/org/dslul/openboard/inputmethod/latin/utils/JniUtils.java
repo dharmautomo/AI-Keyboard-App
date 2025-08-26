@@ -24,13 +24,23 @@ public final class JniUtils {
     private static final String TAG = JniUtils.class.getSimpleName();
 
     public static boolean sHaveGestureLib = false;
+    private static boolean sNativeLibraryLoaded = false;
+    
     static {
         try {
             System.loadLibrary(JniLibName.JNI_LIB_NAME);
+            sHaveGestureLib = true;
+            sNativeLibraryLoaded = true;
+            Log.i(TAG, "Successfully loaded native library: " + JniLibName.JNI_LIB_NAME);
         } catch (UnsatisfiedLinkError ule) {
             Log.e(TAG, "Could not load native library " + JniLibName.JNI_LIB_NAME, ule);
+            sHaveGestureLib = false;
+            sNativeLibraryLoaded = false;
+        } catch (Exception e) {
+            Log.e(TAG, "Unexpected error loading native library " + JniLibName.JNI_LIB_NAME, e);
+            sHaveGestureLib = false;
+            sNativeLibraryLoaded = false;
         }
-
     }
 
     private JniUtils() {
@@ -39,5 +49,12 @@ public final class JniUtils {
 
     public static void loadNativeLibrary() {
         // Ensures the static initializer is called
+        if (!sNativeLibraryLoaded) {
+            Log.w(TAG, "Native library not loaded, some features may not work properly");
+        }
+    }
+    
+    public static boolean isNativeLibraryLoaded() {
+        return sNativeLibraryLoaded;
     }
 }

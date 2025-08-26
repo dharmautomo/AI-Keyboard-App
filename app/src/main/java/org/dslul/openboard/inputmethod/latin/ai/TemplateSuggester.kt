@@ -1,12 +1,15 @@
 package org.dslul.openboard.inputmethod.latin.ai
 
 import org.dslul.openboard.inputmethod.latin.SuggestedWords
+import android.util.Log
 
 /**
  * Lightweight templates provider. Later we can back this by Room/DataStore.
  * For now, keep a small in-memory list of keyword→template pairs.
  */
 object TemplateSuggester {
+    private const val TAG = "TemplateSuggester"
+
     data class Template(val trigger: String, val content: String)
 
     // Demo templates. Replace with persisted data later.
@@ -15,44 +18,56 @@ object TemplateSuggester {
         Template("omw", "On my way!"),
         Template("ty", "Thank you!"),
         Template("tysm", "Thank you so much!"),
-        Template("intro", "Hi, I’m using the new AI Keyboard app.")
+        Template("intro", "Hi, I'm using the new AI Keyboard app.")
     )
 
     /**
      * Returns template suggestions matching the tail token of the given textBefore.
      */
     fun suggestionsFor(textBeforeCursor: CharSequence?, max: Int = 3): SuggestedWords? {
-        val tail = lastToken(textBeforeCursor?.toString().orEmpty())
-        val matches = if (tail.isEmpty()) templates else templates.filter { it.trigger.startsWith(tail, ignoreCase = true) }
-        if (matches.isEmpty()) return null
+        return try {
+            val tail = lastToken(textBeforeCursor?.toString().orEmpty())
+            val matches = if (tail.isEmpty()) templates else templates.filter { it.trigger.startsWith(tail, ignoreCase = true) }
+            if (matches.isEmpty()) return null
 
-        val infos = matches.take(max).map {
-            SuggestedWords.SuggestedWordInfo(
-                it.content,
-                "",
-                SuggestedWords.SuggestedWordInfo.MAX_SCORE,
-                SuggestedWords.SuggestedWordInfo.KIND_PREDICTION,
+            val infos = matches.take(max).map {
+                SuggestedWords.SuggestedWordInfo(
+                    it.content,
+                    "",
+                    SuggestedWords.SuggestedWordInfo.MAX_SCORE,
+                    SuggestedWords.SuggestedWordInfo.KIND_PREDICTION,
+                    null,
+                    SuggestedWords.SuggestedWordInfo.NOT_AN_INDEX,
+                    SuggestedWords.SuggestedWordInfo.NOT_A_CONFIDENCE
+                )
+            }
+            SuggestedWords(
+                ArrayList(infos),
                 null,
-                SuggestedWords.SuggestedWordInfo.NOT_AN_INDEX,
-                SuggestedWords.SuggestedWordInfo.NOT_A_CONFIDENCE
+                null,
+                false,
+                false,
+                false,
+                SuggestedWords.INPUT_STYLE_PREDICTION,
+                SuggestedWords.NOT_A_SEQUENCE_NUMBER
             )
+        } catch (e: Exception) {
+            Log.e(TAG, "Error generating template suggestions", e)
+            null
         }
-        return SuggestedWords(
-            ArrayList(infos),
-            null,
-            null,
-            false,
-            false,
-            false,
-            SuggestedWords.INPUT_STYLE_PREDICTION,
-            SuggestedWords.NOT_A_SEQUENCE_NUMBER
-        )
     }
 
     private fun lastToken(text: String): String {
-        if (text.isBlank()) return ""
-        val parts = text.split('\n', ' ', '\t')
-        return parts.lastOrNull { it.isNotBlank() }?.trim().orEmpty()
+        return try {
+            if (text.isBlank()) ""
+            else {
+                val parts = text.split('\n', ' ', '\t')
+                parts.lastOrNull { it.isNotBlank() }?.trim().orEmpty()
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error parsing last token", e)
+            ""
+        }
     }
 }
 
