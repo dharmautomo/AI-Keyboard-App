@@ -242,7 +242,7 @@ class MainKeyboardAccessibilityDelegate(mainKeyboardView: MainKeyboardView,
         if (key.hasNoPanelAutoMoreKey()) { // This long press has registered a code point without showing a more keys keyboard.
 // We should talk back the code point if possible.
             val codePointOfNoPanelAutoMoreKey = key.moreKeys!![0].mCode
-            val text: String = KeyCodeDescriptionMapper.instance.getDescriptionForCodePoint(
+            val text: String = KeyCodeDescriptionMapper.getDescriptionForCodePoint(
                     mKeyboardView!!.context, codePointOfNoPanelAutoMoreKey)!!
             text.let { sendWindowStateChanged(it) }
         }

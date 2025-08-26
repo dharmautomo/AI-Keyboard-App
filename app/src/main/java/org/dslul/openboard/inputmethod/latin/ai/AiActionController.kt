@@ -5,12 +5,17 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
+import android.util.Log
 
 class AiActionController(
     private val provider: AiProvider,
     private val commitCallback: (String) -> Unit,
     private val progressCallback: (String) -> Unit = {}
 ) {
+    companion object {
+        private const val TAG = "AiActionController"
+    }
+
     private val scope = CoroutineScope(Dispatchers.IO)
     private var job: Job? = null
 
@@ -33,6 +38,7 @@ class AiActionController(
         targetLang: String? = null,
         customPrompt: String? = null
     ) {
+        Log.d(TAG, "Starting AI action: $action")
         execute(
             AiProvider.Request(
                 action = action,
@@ -47,20 +53,32 @@ class AiActionController(
 
     fun cancel() {
         job?.cancel()
+        Log.d(TAG, "AI action cancelled")
     }
 
     private fun execute(req: AiProvider.Request) {
         job?.cancel()
         job = scope.launch {
-            val builder = StringBuilder()
-            provider.stream(req).collect { chunk ->
-                if (chunk.content.isNotEmpty()) {
-                    builder.append(parseDelta(chunk.content))
-                    progressCallback(builder.toString())
+            try {
+                val builder = StringBuilder()
+                provider.stream(req).collect { chunk ->
+                    if (chunk.content.isNotEmpty()) {
+                        val parsedContent = parseDelta(chunk.content)
+                        if (parsedContent.isNotEmpty()) {
+                            builder.append(parsedContent)
+                            progressCallback(builder.toString())
+                        }
+                    }
+                    if (chunk.isDone) {
+                        val finalResult = builder.toString()
+                        Log.d(TAG, "AI action completed, result length: ${finalResult.length}")
+                        commitCallback(finalResult)
+                    }
                 }
-                if (chunk.isDone) {
-                    commitCallback(builder.toString())
-                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error executing AI action", e)
+                // Send error message to user
+                commitCallback("Sorry, an error occurred while processing your request. Please try again.")
             }
         }
     }
@@ -75,6 +93,7 @@ class AiActionController(
                 delta?.optString("content").orEmpty()
             } else obj.optString("content")
         } catch (t: Throwable) {
+            Log.w(TAG, "Failed to parse delta content: $raw", t)
             ""
         }
     }

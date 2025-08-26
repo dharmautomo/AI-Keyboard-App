@@ -292,7 +292,7 @@ class KeyboardAccessibilityNodeProvider<KV : KeyboardView?>(keyboardView: KV,
     }
 
     init {
-        mKeyCodeDescriptionMapper = KeyCodeDescriptionMapper.Companion.instance
+        mKeyCodeDescriptionMapper = KeyCodeDescriptionMapper
         mAccessibilityUtils = AccessibilityUtils.Companion.instance
         mKeyboardView = keyboardView
         mDelegate = delegate

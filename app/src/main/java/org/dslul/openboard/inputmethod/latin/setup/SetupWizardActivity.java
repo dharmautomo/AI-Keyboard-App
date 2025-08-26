@@ -118,111 +118,124 @@ public final class SetupWizardActivity extends Activity implements View.OnClickL
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {
-        setTheme(android.R.style.Theme_Translucent_NoTitleBar);
-        super.onCreate(savedInstanceState);
+        try {
+            setTheme(android.R.style.Theme_Translucent_NoTitleBar);
+            super.onCreate(savedInstanceState);
 
-        mImm = (InputMethodManager)getSystemService(INPUT_METHOD_SERVICE);
-        mHandler = new SettingsPoolingHandler(this, mImm);
+            mImm = (InputMethodManager)getSystemService(INPUT_METHOD_SERVICE);
+            if (mImm == null) {
+                Log.e(TAG, "InputMethodManager is null, cannot continue setup");
+                finish();
+                return;
+            }
+            
+            mHandler = new SettingsPoolingHandler(this, mImm);
 
-        setContentView(R.layout.setup_wizard);
-        mSetupWizard = findViewById(R.id.setup_wizard);
+            setContentView(R.layout.setup_wizard);
+            mSetupWizard = findViewById(R.id.setup_wizard);
 
-        if (savedInstanceState == null) {
-            mStepNumber = determineSetupStepNumberFromLauncher();
-        } else {
-            mStepNumber = savedInstanceState.getInt(STATE_STEP);
+            if (savedInstanceState == null) {
+                mStepNumber = determineSetupStepNumberFromLauncher();
+            } else {
+                mStepNumber = savedInstanceState.getInt(STATE_STEP);
+            }
+
+            final String applicationName = getResources().getString(getApplicationInfo().labelRes);
+            mWelcomeScreen = findViewById(R.id.setup_welcome_screen);
+            final TextView welcomeTitle = findViewById(R.id.setup_welcome_title);
+            welcomeTitle.setText(getString(R.string.setup_welcome_title, applicationName));
+
+            mSetupScreen = findViewById(R.id.setup_steps_screen);
+            final TextView stepsTitle = findViewById(R.id.setup_title);
+            stepsTitle.setText(getString(R.string.setup_steps_title, applicationName));
+
+            final SetupStepIndicatorView indicatorView =
+                    findViewById(R.id.setup_step_indicator);
+            mSetupStepGroup = new SetupStepGroup(indicatorView);
+
+            mStep1Bullet = findViewById(R.id.setup_step1_bullet);
+            mStep1Bullet.setOnClickListener(this);
+            final SetupStep step1 = new SetupStep(STEP_1, applicationName,
+                    mStep1Bullet, findViewById(R.id.setup_step1),
+                    R.string.setup_step1_title, R.string.setup_step1_instruction,
+                    R.string.setup_step1_finished_instruction, R.drawable.ic_setup_step1,
+                    R.string.setup_step1_action);
+            final SettingsPoolingHandler handler = mHandler;
+            step1.setAction(new Runnable() {
+                @Override
+                public void run() {
+                    invokeLanguageAndInputSettings();
+                    handler.startPollingImeSettings();
+                }
+            });
+            mSetupStepGroup.addStep(step1);
+
+            final SetupStep step2 = new SetupStep(STEP_2, applicationName,
+                    (TextView)findViewById(R.id.setup_step2_bullet), findViewById(R.id.setup_step2),
+                    R.string.setup_step2_title, R.string.setup_step2_instruction,
+                    0 /* finishedInstruction */, R.drawable.ic_setup_step2,
+                    R.string.setup_step2_action);
+            step2.setAction(new Runnable() {
+                @Override
+                public void run() {
+                    invokeInputMethodPicker();
+                }
+            });
+            mSetupStepGroup.addStep(step2);
+
+            final SetupStep step3 = new SetupStep(STEP_3, applicationName,
+                    (TextView)findViewById(R.id.setup_step3_bullet), findViewById(R.id.setup_step3),
+                    R.string.setup_step3_title, R.string.setup_step3_instruction,
+                    0 /* finishedInstruction */, R.drawable.ic_setup_step3,
+                    R.string.setup_step3_action);
+            step3.setAction(new Runnable() {
+                @Override
+                public void run() {
+                    invokeSubtypeEnablerOfThisIme();
+                }
+            });
+            mSetupStepGroup.addStep(step3);
+
+            mWelcomeVideoUri = new Uri.Builder()
+                    .scheme(ContentResolver.SCHEME_ANDROID_RESOURCE)
+                    .authority(getPackageName())
+                    .path(Integer.toString(R.raw.setup_welcome_video))
+                    .build();
+            final VideoView welcomeVideoView = findViewById(R.id.setup_welcome_video);
+            welcomeVideoView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+                @Override
+                public void onPrepared(final MediaPlayer mp) {
+                    // Now VideoView has been laid-out and ready to play, remove background of it to
+                    // reveal the video.
+                    welcomeVideoView.setBackgroundResource(0);
+                    mp.setLooping(true);
+                }
+            });
+            welcomeVideoView.setOnErrorListener(new MediaPlayer.OnErrorListener() {
+                @Override
+                public boolean onError(final MediaPlayer mp, final int what, final int extra) {
+                    Log.e(TAG, "Playing welcome video causes error: what=" + what + " extra=" + extra);
+                    hideWelcomeVideoAndShowWelcomeImage();
+                    return true;
+                }
+            });
+            mWelcomeVideoView = welcomeVideoView;
+            mWelcomeImageView = findViewById(R.id.setup_welcome_image);
+
+            mActionStart = findViewById(R.id.setup_start_label);
+            mActionStart.setOnClickListener(this);
+            mActionNext = findViewById(R.id.setup_next);
+            mActionNext.setOnClickListener(this);
+            mActionFinish = findViewById(R.id.setup_finish);
+            mActionFinish.setCompoundDrawablesRelativeWithIntrinsicBounds(getResources().getDrawable(R.drawable.ic_setup_finish),
+                                                            null, null, null);
+            mActionFinish.setOnClickListener(this);
+        } catch (Exception e) {
+            Log.e(TAG, "Error in onCreate", e);
+            // Show error message to user
+            android.widget.Toast.makeText(this, "Setup error: " + e.getMessage(), android.widget.Toast.LENGTH_LONG).show();
+            finish();
         }
-
-        final String applicationName = getResources().getString(getApplicationInfo().labelRes);
-        mWelcomeScreen = findViewById(R.id.setup_welcome_screen);
-        final TextView welcomeTitle = findViewById(R.id.setup_welcome_title);
-        welcomeTitle.setText(getString(R.string.setup_welcome_title, applicationName));
-
-        mSetupScreen = findViewById(R.id.setup_steps_screen);
-        final TextView stepsTitle = findViewById(R.id.setup_title);
-        stepsTitle.setText(getString(R.string.setup_steps_title, applicationName));
-
-        final SetupStepIndicatorView indicatorView =
-                findViewById(R.id.setup_step_indicator);
-        mSetupStepGroup = new SetupStepGroup(indicatorView);
-
-        mStep1Bullet = findViewById(R.id.setup_step1_bullet);
-        mStep1Bullet.setOnClickListener(this);
-        final SetupStep step1 = new SetupStep(STEP_1, applicationName,
-                mStep1Bullet, findViewById(R.id.setup_step1),
-                R.string.setup_step1_title, R.string.setup_step1_instruction,
-                R.string.setup_step1_finished_instruction, R.drawable.ic_setup_step1,
-                R.string.setup_step1_action);
-        final SettingsPoolingHandler handler = mHandler;
-        step1.setAction(new Runnable() {
-            @Override
-            public void run() {
-                invokeLanguageAndInputSettings();
-                handler.startPollingImeSettings();
-            }
-        });
-        mSetupStepGroup.addStep(step1);
-
-        final SetupStep step2 = new SetupStep(STEP_2, applicationName,
-                (TextView)findViewById(R.id.setup_step2_bullet), findViewById(R.id.setup_step2),
-                R.string.setup_step2_title, R.string.setup_step2_instruction,
-                0 /* finishedInstruction */, R.drawable.ic_setup_step2,
-                R.string.setup_step2_action);
-        step2.setAction(new Runnable() {
-            @Override
-            public void run() {
-                invokeInputMethodPicker();
-            }
-        });
-        mSetupStepGroup.addStep(step2);
-
-        final SetupStep step3 = new SetupStep(STEP_3, applicationName,
-                (TextView)findViewById(R.id.setup_step3_bullet), findViewById(R.id.setup_step3),
-                R.string.setup_step3_title, R.string.setup_step3_instruction,
-                0 /* finishedInstruction */, R.drawable.ic_setup_step3,
-                R.string.setup_step3_action);
-        step3.setAction(new Runnable() {
-            @Override
-            public void run() {
-                invokeSubtypeEnablerOfThisIme();
-            }
-        });
-        mSetupStepGroup.addStep(step3);
-
-        mWelcomeVideoUri = new Uri.Builder()
-                .scheme(ContentResolver.SCHEME_ANDROID_RESOURCE)
-                .authority(getPackageName())
-                .path(Integer.toString(R.raw.setup_welcome_video))
-                .build();
-        final VideoView welcomeVideoView = findViewById(R.id.setup_welcome_video);
-        welcomeVideoView.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
-            @Override
-            public void onPrepared(final MediaPlayer mp) {
-                // Now VideoView has been laid-out and ready to play, remove background of it to
-                // reveal the video.
-                welcomeVideoView.setBackgroundResource(0);
-                mp.setLooping(true);
-            }
-        });
-        welcomeVideoView.setOnErrorListener(new MediaPlayer.OnErrorListener() {
-            @Override
-            public boolean onError(final MediaPlayer mp, final int what, final int extra) {
-                Log.e(TAG, "Playing welcome video causes error: what=" + what + " extra=" + extra);
-                hideWelcomeVideoAndShowWelcomeImage();
-                return true;
-            }
-        });
-        mWelcomeVideoView = welcomeVideoView;
-        mWelcomeImageView = findViewById(R.id.setup_welcome_image);
-
-        mActionStart = findViewById(R.id.setup_start_label);
-        mActionStart.setOnClickListener(this);
-        mActionNext = findViewById(R.id.setup_next);
-        mActionNext.setOnClickListener(this);
-        mActionFinish = findViewById(R.id.setup_finish);
-        mActionFinish.setCompoundDrawablesRelativeWithIntrinsicBounds(getResources().getDrawable(R.drawable.ic_setup_finish),
-                                                        null, null, null);
-        mActionFinish.setOnClickListener(this);
     }
 
     @Override
