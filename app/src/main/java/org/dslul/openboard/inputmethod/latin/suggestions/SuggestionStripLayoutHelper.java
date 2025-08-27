@@ -32,6 +32,7 @@ import android.text.Spannable;
 import android.text.SpannableString;
 import android.text.Spanned;
 import android.text.TextPaint;
+import android.widget.ImageButton;
 import android.text.TextUtils;
 import android.text.style.CharacterStyle;
 import android.text.style.StyleSpan;
@@ -395,6 +396,8 @@ final class SuggestionStripLayoutHelper {
             setLayoutWeight(wordView, getSuggestionWeight(positionInStrip),
                     ViewGroup.LayoutParams.MATCH_PARENT);
             x += wordView.getMeasuredWidth();
+
+            // Toggle is defined in XML at layout start; no dynamic injection here.
 
             if (SuggestionStripView.DBG) {
                 layoutDebugInfo(positionInStrip, placerView, x);

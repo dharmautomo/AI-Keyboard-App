@@ -853,10 +853,11 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
         final View toggleBtn = view.findViewById(R.id.btn_toggle_ai_strip);
         final View aiStripContainer = view.findViewById(R.id.ai_action_strip_container);
         final View aiTemplates = view.findViewById(R.id.ai_templates_scroll);
-        if (toggleBtn != null && aiStripContainer != null && aiTemplates != null) {
+        if (toggleBtn != null && (aiStripContainer != null || aiTemplates != null)) {
             toggleBtn.setOnClickListener(v -> {
-                final boolean showing = aiTemplates.getVisibility() == View.VISIBLE;
-                aiTemplates.setVisibility(showing ? View.GONE : View.VISIBLE);
+                final View target = aiTemplates != null ? aiTemplates : aiStripContainer;
+                final boolean showing = target.getVisibility() == View.VISIBLE;
+                target.setVisibility(showing ? View.GONE : View.VISIBLE);
                 // Update toggle icon
                 if (toggleBtn instanceof android.widget.ImageButton) {
                     ((android.widget.ImageButton) toggleBtn).setImageResource(

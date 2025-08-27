@@ -73,6 +73,8 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
     private final ImageButton mVoiceKey;
     private final ImageButton mClipboardKey;
     private final ImageButton mOtherKey;
+    private final ImageButton mToggle;
+    private View mAiActionStrip; // Target view to show/hide via toggle
     MainKeyboardView mMainKeyboardView;
 
     private final View mMoreSuggestionsContainer;
@@ -134,6 +136,7 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
         mVoiceKey = findViewById(R.id.suggestions_strip_voice_key);
         mClipboardKey = findViewById(R.id.suggestions_strip_clipboard_key);
         mOtherKey = findViewById(R.id.suggestions_strip_other_key);
+        mToggle = findViewById(R.id.suggestions_strip_toggle);
         mStripVisibilityGroup = new StripVisibilityGroup(this, mSuggestionsStrip);
 
         for (int pos = 0; pos < SuggestedWords.MAX_SUGGESTIONS; pos++) {
@@ -177,6 +180,55 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
         mClipboardKey.setOnLongClickListener(this);
 
         mOtherKey.setImageDrawable(iconIncognito);
+
+        // Initialize toggle: set icon now; actual target view is wired in setListener
+        if (mToggle != null) {
+            final boolean expanded = isActionStripExpanded(getContext());
+            applyToggleState(expanded, /*animate*/ false);
+            mToggle.setOnClickListener(v -> applyToggleState(!isActionStripExpanded(getContext()), true));
+        }
+    }
+
+    private static final String PREFS_NAME = "openboard_prefs";
+    private static final String PREF_KEY_ACTION_STRIP_EXPANDED = "action_strip_expanded";
+
+    private static boolean isActionStripExpanded(final Context context) {
+        return context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                .getBoolean(PREF_KEY_ACTION_STRIP_EXPANDED, true);
+    }
+
+    private static void setActionStripExpanded(final Context context, final boolean expanded) {
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                .edit().putBoolean(PREF_KEY_ACTION_STRIP_EXPANDED, expanded).apply();
+    }
+
+    private void applyToggleState(final boolean expanded, final boolean animate) {
+        setActionStripExpanded(getContext(), expanded);
+        if (mToggle != null) {
+            mToggle.setImageResource(expanded ? R.drawable.ic_chevron_up : R.drawable.ic_chevron_down);
+            // Use a generic content description available in strings
+            mToggle.setContentDescription(getResources().getString(R.string.show_hide_action_strip));
+        }
+        // Toggle AI action strip only (not the suggestions strip)
+        final View strip = mAiActionStrip;
+        if (!animate) {
+            if (strip != null) {
+                strip.setVisibility(expanded ? VISIBLE : GONE);
+            }
+            requestLayout();
+            return;
+        }
+        if (strip != null) {
+            if (expanded) {
+                strip.setVisibility(VISIBLE);
+                strip.setAlpha(0f);
+                strip.animate().alpha(1f).setDuration(120).start();
+            } else {
+                strip.animate().alpha(0f).setDuration(120).withEndAction(() -> {
+                    strip.setVisibility(GONE);
+                }).start();
+            }
+        }
     }
 
     /**
@@ -186,6 +238,9 @@ public final class SuggestionStripView extends RelativeLayout implements OnClick
     public void setListener(final Listener listener, final View inputView) {
         mListener = listener;
         mMainKeyboardView = inputView.findViewById(R.id.keyboard_view);
+        // Wire AI action strip reference and apply persisted toggle state
+        mAiActionStrip = inputView.findViewById(R.id.ai_action_strip);
+        applyToggleState(isActionStripExpanded(getContext()), /*animate*/ false);
     }
 
     public void updateVisibility(final boolean shouldBeVisible, final boolean isFullscreenMode) {

@@ -102,18 +102,6 @@
         </LinearLayout>
     </HorizontalScrollView>
 
-    <!-- Toggle button positioned at the end of the templates row; remains visible when templates hidden -->
-    <ImageButton
-        android:id="@+id/btn_toggle_ai_strip"
-        android:layout_width="36dp"
-        android:layout_height="36dp"
-        android:layout_marginStart="4dp"
-        android:background="@drawable/bg_ai_toggle_circle"
-        android:contentDescription="@string/show_hide_action_strip"
-        android:padding="8dp"
-        android:src="@drawable/ic_chevron_up"
-        android:tint="#B3FFFFFF" />
-
 </LinearLayout>
 
 

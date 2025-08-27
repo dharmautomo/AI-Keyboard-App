@@ -27,6 +27,14 @@
         android:layout_height="match_parent"
         android:hapticFeedbackEnabled="false"
         android:soundEffectsEnabled="false">
+        <!-- Move toggle to far left -->
+        <ImageButton
+            android:id="@+id/suggestions_strip_toggle"
+            android:layout_width="@dimen/config_suggestions_strip_edge_key_width"
+            android:layout_height="fill_parent"
+            android:contentDescription="@string/show_hide_action_strip"
+            android:background="?android:attr/selectableItemBackgroundBorderless"
+            style="?attr/suggestionWordStyle" />
         <!-- Provide audio and haptic feedback by ourselves based on the keyboard settings.
              We just need to ignore the system's audio and haptic feedback settings. -->
         <ImageButton
@@ -36,8 +44,6 @@
             android:layout_weight="0"
             style="?attr/suggestionWordStyle"
             android:contentDescription="@string/more_keys_strip_description" />
-        <!-- Provide audio and haptic feedback by ourselves based on the keyboard settings.
-             We just need to ignore the system's audio and haptic feedback settings. -->
         <LinearLayout
             android:id="@+id/suggestions_strip"
             android:orientation="horizontal"
