@@ -114,6 +114,7 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
     private static final boolean TRACE = false;
 
     private static final int EXTENDED_TOUCHABLE_REGION_HEIGHT = 100;
+    public static LatinIME sInstance;
     private static final int PERIOD_FOR_AUDIO_AND_HAPTIC_FEEDBACK_IN_KEY_REPEAT = 2;
     private static final int PENDING_IMS_CALLBACK_DURATION_MILLIS = 800;
     static final long DELAY_WAIT_FOR_DICTIONARY_LOAD_MILLIS = TimeUnit.SECONDS.toMillis(2);
@@ -623,6 +624,8 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
         AccessibilityUtils.init(this);
         mStatsUtilsManager.onCreate(this /* context */, mDictionaryFacilitator);
         super.onCreate();
+        // Expose instance for lightweight access (TemplateSuggester)
+        sInstance = this;
 
         mClipboardHistoryManager.onCreate();
         mHandler.onCreate();
@@ -847,6 +850,18 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
         final View btnTranslate = view.findViewById(R.id.ai_btn_translate);
         if (btnTranslate != null) {
             btnTranslate.setOnClickListener(v -> onAiAction(org.dslul.openboard.inputmethod.latin.ai.AiProvider.Action.TRANSLATE));
+        }
+
+        // Auto Text - open list page activity
+        final View btnAutoText = view.findViewById(R.id.ai_btn_autotext);
+        if (btnAutoText != null) {
+            btnAutoText.setOnClickListener(v -> {
+                // Hide keyboard and launch AutoTextActivity
+                requestHideSelf(0);
+                android.content.Intent i = new android.content.Intent(this, org.dslul.openboard.inputmethod.latin.autotext.AutoTextActivity.class);
+                i.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(i);
+            });
         }
 
         // Toggle action strip visibility

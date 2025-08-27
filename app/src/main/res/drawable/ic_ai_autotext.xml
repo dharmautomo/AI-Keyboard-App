@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- Auto Text icon: document with lightning/bolt to indicate shortcut text -->
+    <path android:fillColor="#FFFFFFFF"
+        android:pathData="M6,2h7l5,5v13c0,1.1 -0.9,2 -2,2H6c-1.1,0 -2,-0.9 -2,-2V4c0,-1.1 0.9,-2 2,-2zM13,3.5V9h5.5L13,3.5zM8,12h5v2H8v-2zm0,4h8v2H8v-2z"/>
+    <path android:fillColor="#FFFFFFFF" android:pathData="M11,7l-1.5,3H12l-1.5,3H14l1.5,-3H13l1.5,-3H11z"/>
+</vector>
+
+

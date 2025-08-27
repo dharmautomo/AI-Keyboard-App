@@ -22,6 +22,11 @@
     <string name="ai_improve">Improve</string>
     <string name="ai_grammar">Grammar</string>
     <string name="ai_translate">Translate</string>
+    <string name="ai_auto_text">Auto Text</string>
+    <string name="auto_text_add">Add Auto Text</string>
+    <string name="auto_text_shortcut">Shortcut</string>
+    <string name="auto_text_message">Messages</string>
+    <string name="auto_text_list_title">Auto Text</string>
     <string name="show_hide_action_strip">Show or hide action strip</string>
     <string name="ai_prompt">Prompt</string>
     <string name="ai_templates">Templates</string>

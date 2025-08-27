@@ -97,6 +97,24 @@
                 android:drawableTint="@android:color/white"
                 android:drawablePadding="8dp" />
 
+            <Button
+                android:id="@+id/ai_btn_autotext"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:minHeight="36dp"
+                android:minWidth="0dp"
+                android:layout_marginEnd="8dp"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:background="@drawable/bg_ai_chip"
+                android:text="@string/ai_auto_text"
+                android:textColor="@android:color/white"
+                android:textAllCaps="false"
+                android:textSize="@dimen/ai_action_strip_text_size"
+                android:drawableStart="@drawable/ic_ai_autotext"
+                android:drawableTint="@android:color/white"
+                android:drawablePadding="8dp" />
+
             <!-- Only the four AI actions to match the design -->
 
         </LinearLayout>

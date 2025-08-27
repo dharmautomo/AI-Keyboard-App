@@ -9,7 +9,7 @@ import org.dslul.openboard.inputmethod.latin.SuggestedWords
 object TemplateSuggester {
     data class Template(val trigger: String, val content: String)
 
-    // Demo templates. Replace with persisted data later.
+    // Demo templates plus user Auto Text entries merged at query time
     private val templates: List<Template> = listOf(
         Template("brb", "Be right back."),
         Template("omw", "On my way!"),
@@ -23,7 +23,14 @@ object TemplateSuggester {
      */
     fun suggestionsFor(textBeforeCursor: CharSequence?, max: Int = 3): SuggestedWords? {
         val tail = lastToken(textBeforeCursor?.toString().orEmpty())
-        val matches = if (tail.isEmpty()) templates else templates.filter { it.trigger.startsWith(tail, ignoreCase = true) }
+        val ctx = org.dslul.openboard.inputmethod.latin.LatinIME.sInstance
+        val repoEntries = try {
+            if (ctx != null) org.dslul.openboard.inputmethod.latin.autotext.AutoTextRepository(ctx).getAll()
+            else emptyList()
+        } catch (_: Throwable) { emptyList() }
+        val repoTemplates = repoEntries.map { Template(it.shortcut, it.message) }
+        val all = templates + repoTemplates
+        val matches = if (tail.isEmpty()) repoTemplates else all.filter { it.trigger.startsWith(tail, ignoreCase = true) }
         if (matches.isEmpty()) return null
 
         val infos = matches.take(max).map {

@@ -112,6 +112,11 @@
         <activity android:name=".settings.TestFragmentActivity"
                 android:exported="false" />
 
+        <!-- Auto Text list & form -->
+        <activity android:name="org.dslul.openboard.inputmethod.latin.autotext.AutoTextActivity"
+            android:exported="false"
+            android:theme="@style/platformActivityTheme" />
+
         <!-- Broadcast receivers -->
         <receiver android:name="SystemBroadcastReceiver"
                 android:exported="true">
@@ -138,6 +143,4 @@
                 android:label="@string/dictionary_provider_name">
         </provider>
     </application>
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.INTERNET" />
 </manifest>
