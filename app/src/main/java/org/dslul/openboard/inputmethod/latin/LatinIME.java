@@ -1607,6 +1607,15 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
                         mKeyboardSwitcher.getCurrentKeyboardScriptId(), mHandler);
         updateStateAfterInputTransaction(completeInputTransaction);
         mKeyboardSwitcher.onEvent(event, getCurrentAutoCapsState(), getCurrentRecapitalizeState());
+        // Hide/show AI action strip in number/symbol modes
+        try {
+            final Keyboard currentKeyboard = mKeyboardSwitcher.getKeyboard();
+            final View aiStrip = mInputView != null ? mInputView.findViewById(R.id.ai_action_strip) : null;
+            if (aiStrip != null && currentKeyboard != null) {
+                final boolean isAlphabet = currentKeyboard.mId.isAlphabetKeyboard();
+                aiStrip.setVisibility(isAlphabet ? View.VISIBLE : View.GONE);
+            }
+        } catch (Throwable ignored) {}
     }
 
     // A helper method to split the code point and the key code. Ultimately, they should not be

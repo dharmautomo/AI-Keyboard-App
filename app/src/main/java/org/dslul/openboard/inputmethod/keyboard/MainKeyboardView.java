@@ -845,7 +845,16 @@ public final class MainKeyboardView extends KeyboardView implements DrawingProxy
             }
         }
 
-        final String middleText = subtype.getMiddleDisplayName();
+        String middleText = subtype.getMiddleDisplayName();
+        // Customize copy: Lancar • English/Indonesia
+        try {
+            final String locale = subtype.getLocale().toString();
+            if (locale.startsWith("en")) {
+                middleText = "Lancar • English";
+            } else if (locale.startsWith("in") || locale.startsWith("id")) {
+                middleText = "Lancar • Indonesia";
+            }
+        } catch (Throwable ignored) {}
         if (fitsTextIntoWidth(width, middleText, paint)) {
             return middleText;
         }

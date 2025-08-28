@@ -38,12 +38,7 @@
             android:visibility="visible" />
     </FrameLayout>
 
-    <!-- Separator between AI strip and keyboard area -->
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-        android:background="#22FFFFFF"
-        android:layout_marginTop="4dp" />
+    <!-- Removed separator to eliminate gap between action strip and keyboard area -->
 
     <!-- Main keyboard area with consistent spacing -->
     <LinearLayout
@@ -51,8 +46,8 @@
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
         android:orientation="vertical"
-        android:paddingTop="4dp"
-        android:paddingBottom="4dp" >
+        android:paddingTop="0dp"
+        android:paddingBottom="0dp" >
 
         <!-- To ensure that key preview popup is correctly placed when the current system locale is
              one of RTL locales, layoutDirection="ltr" is needed in the SDK version 17+. -->
