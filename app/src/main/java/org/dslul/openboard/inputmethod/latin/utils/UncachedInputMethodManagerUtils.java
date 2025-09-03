@@ -20,6 +20,8 @@ import android.content.Context;
 import android.provider.Settings;
 import android.view.inputmethod.InputMethodInfo;
 import android.view.inputmethod.InputMethodManager;
+import android.util.Log;
+import java.util.List;
 
 /*
  * A utility class for {@link InputMethodManager}. Unlike {@link RichInputMethodManager}, this
@@ -38,13 +40,51 @@ public final class UncachedInputMethodManagerUtils {
      */
     public static boolean isThisImeEnabled(final Context context,
             final InputMethodManager imm) {
-        final String packageName = context.getPackageName();
-        for (final InputMethodInfo imi : imm.getEnabledInputMethodList()) {
-            if (packageName.equals(imi.getPackageName())) {
-                return true;
+        try {
+            if (context == null) {
+                Log.e("UncachedInputMethodManagerUtils", "isThisImeEnabled: context is null");
+                return false;
             }
+            if (imm == null) {
+                Log.e("UncachedInputMethodManagerUtils", "isThisImeEnabled: InputMethodManager is null");
+                return false;
+            }
+            
+            final String packageName = context.getPackageName();
+            if (packageName == null) {
+                Log.e("UncachedInputMethodManagerUtils", "isThisImeEnabled: packageName is null");
+                return false;
+            }
+            
+            List<InputMethodInfo> enabledInputMethodList = null;
+            try {
+                enabledInputMethodList = imm.getEnabledInputMethodList();
+            } catch (SecurityException e) {
+                Log.e("UncachedInputMethodManagerUtils", "SecurityException calling imm.getEnabledInputMethodList(): " + e.getMessage(), e);
+                return false;
+            } catch (Exception e) {
+                Log.e("UncachedInputMethodManagerUtils", "Error calling imm.getEnabledInputMethodList(): " + e.getMessage(), e);
+                return false;
+            }
+            
+            if (enabledInputMethodList == null) {
+                Log.e("UncachedInputMethodManagerUtils", "isThisImeEnabled: EnabledInputMethodList is null");
+                return false;
+            }
+            
+            for (final InputMethodInfo imi : enabledInputMethodList) {
+                if (imi != null && packageName.equals(imi.getPackageName())) {
+                    return true;
+                }
+            }
+            return false;
+        } catch (SecurityException e) {
+            Log.e("UncachedInputMethodManagerUtils", "SecurityException in isThisImeEnabled: " + e.getMessage(), e);
+            return false;
+        } catch (Exception e) {
+            Log.e("UncachedInputMethodManagerUtils", "Unexpected error in isThisImeEnabled: " + e.getMessage(), e);
+            return false;
         }
-        return false;
     }
 
     /**
@@ -57,10 +97,44 @@ public final class UncachedInputMethodManagerUtils {
      */
     public static boolean isThisImeCurrent(final Context context,
             final InputMethodManager imm) {
-        final InputMethodInfo imi = getInputMethodInfoOf(context.getPackageName(), imm);
-        final String currentImeId = Settings.Secure.getString(
-                context.getContentResolver(), Settings.Secure.DEFAULT_INPUT_METHOD);
-        return imi != null && imi.getId().equals(currentImeId);
+        try {
+            if (context == null) {
+                Log.e("UncachedInputMethodManagerUtils", "isThisImeCurrent: context is null");
+                return false;
+            }
+            if (imm == null) {
+                Log.e("UncachedInputMethodManagerUtils", "isThisImeCurrent: InputMethodManager is null");
+                return false;
+            }
+            
+            final InputMethodInfo imi = getInputMethodInfoOf(context.getPackageName(), imm);
+            if (imi == null) {
+                return false;
+            }
+            
+            try {
+                final String currentImeId = Settings.Secure.getString(
+                        context.getContentResolver(), Settings.Secure.DEFAULT_INPUT_METHOD);
+                if (currentImeId == null) {
+                    Log.w("UncachedInputMethodManagerUtils", "isThisImeCurrent: currentImeId is null");
+                    return false;
+                }
+                
+                return imi.getId().equals(currentImeId);
+            } catch (SecurityException e) {
+                Log.e("UncachedInputMethodManagerUtils", "SecurityException accessing Settings.Secure: " + e.getMessage(), e);
+                return false;
+            } catch (Exception e) {
+                Log.e("UncachedInputMethodManagerUtils", "Error accessing Settings.Secure: " + e.getMessage(), e);
+                return false;
+            }
+        } catch (SecurityException e) {
+            Log.e("UncachedInputMethodManagerUtils", "SecurityException in isThisImeCurrent: " + e.getMessage(), e);
+            return false;
+        } catch (Exception e) {
+            Log.e("UncachedInputMethodManagerUtils", "Unexpected error in isThisImeCurrent: " + e.getMessage(), e);
+            return false;
+        }
     }
 
     /**
@@ -74,11 +148,44 @@ public final class UncachedInputMethodManagerUtils {
      */
     public static InputMethodInfo getInputMethodInfoOf(final String packageName,
             final InputMethodManager imm) {
-        for (final InputMethodInfo imi : imm.getInputMethodList()) {
-            if (packageName.equals(imi.getPackageName())) {
-                return imi;
+        try {
+            if (imm == null) {
+                Log.e("UncachedInputMethodManagerUtils", "getInputMethodInfoOf: InputMethodManager is null");
+                return null;
             }
+            if (packageName == null) {
+                Log.e("UncachedInputMethodManagerUtils", "getInputMethodInfoOf: packageName is null");
+                return null;
+            }
+            
+            List<InputMethodInfo> inputMethodList = null;
+            try {
+                inputMethodList = imm.getInputMethodList();
+            } catch (SecurityException e) {
+                Log.e("UncachedInputMethodManagerUtils", "SecurityException calling imm.getInputMethodList(): " + e.getMessage(), e);
+                return null;
+            } catch (Exception e) {
+                Log.e("UncachedInputMethodManagerUtils", "Error calling imm.getInputMethodList(): " + e.getMessage(), e);
+                return null;
+            }
+            
+            if (inputMethodList == null) {
+                Log.e("UncachedInputMethodManagerUtils", "getInputMethodInfoOf: InputMethodList is null");
+                return null;
+            }
+            
+            for (final InputMethodInfo imi : inputMethodList) {
+                if (imi != null && packageName.equals(imi.getPackageName())) {
+                    return imi;
+                }
+            }
+            return null;
+        } catch (SecurityException e) {
+            Log.e("UncachedInputMethodManagerUtils", "SecurityException in getInputMethodInfoOf: " + e.getMessage(), e);
+            return null;
+        } catch (Exception e) {
+            Log.e("UncachedInputMethodManagerUtils", "Unexpected error in getInputMethodInfoOf: " + e.getMessage(), e);
+            return null;
         }
-        return null;
     }
 }

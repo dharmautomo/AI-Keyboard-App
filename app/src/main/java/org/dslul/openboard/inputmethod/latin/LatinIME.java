@@ -583,21 +583,39 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
         }
 
         public void switchSubtype(final IBinder token, final RichInputMethodManager richImm) {
-            final InputMethodSubtype currentSubtype = richImm.getInputMethodManager()
-                    .getCurrentInputMethodSubtype();
-            final InputMethodSubtype lastActiveSubtype = mLastActiveSubtype;
-            final boolean currentSubtypeHasBeenUsed = mCurrentSubtypeHasBeenUsed;
-            if (currentSubtypeHasBeenUsed) {
-                mLastActiveSubtype = currentSubtype;
-                mCurrentSubtypeHasBeenUsed = false;
+            try {
+                if (token == null) {
+                    Log.e(TAG, "switchSubtype: token is null");
+                    return;
+                }
+                if (richImm == null) {
+                    Log.e(TAG, "switchSubtype: richImm is null");
+                    return;
+                }
+
+                final InputMethodSubtype currentSubtype = richImm.getInputMethodManager()
+                        .getCurrentInputMethodSubtype();
+                if (currentSubtype == null) {
+                    Log.e(TAG, "switchSubtype: currentSubtype is null");
+                    return;
+                }
+
+                final InputMethodSubtype lastActiveSubtype = mLastActiveSubtype;
+                final boolean currentSubtypeHasBeenUsed = mCurrentSubtypeHasBeenUsed;
+                if (currentSubtypeHasBeenUsed) {
+                    mLastActiveSubtype = currentSubtype;
+                    mCurrentSubtypeHasBeenUsed = false;
+                }
+                if (currentSubtypeHasBeenUsed
+                        && richImm.checkIfSubtypeBelongsToThisImeAndEnabled(lastActiveSubtype)
+                        && !currentSubtype.equals(lastActiveSubtype)) {
+                    richImm.setInputMethodAndSubtype(token, lastActiveSubtype);
+                    return;
+                }
+                richImm.switchToNextInputMethod(token, true /* onlyCurrentIme */);
+            } catch (Exception e) {
+                Log.e(TAG, "Error in switchSubtype: " + e.getMessage(), e);
             }
-            if (currentSubtypeHasBeenUsed
-                    && richImm.checkIfSubtypeBelongsToThisImeAndEnabled(lastActiveSubtype)
-                    && !currentSubtype.equals(lastActiveSubtype)) {
-                richImm.setInputMethodAndSubtype(token, lastActiveSubtype);
-                return;
-            }
-            richImm.switchToNextInputMethod(token, true /* onlyCurrentIme */);
         }
     }
 
@@ -1066,16 +1084,33 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
 
     @Override
     public void onCurrentInputMethodSubtypeChanged(final InputMethodSubtype subtype) {
-        // Note that the calling sequence of onCreate() and
-        // onCurrentInputMethodSubtypeChanged()
-        // is not guaranteed. It may even be called at the same time on a different
-        // thread.
-        InputMethodSubtype oldSubtype = mRichImm.getCurrentSubtype().getRawSubtype();
-        StatsUtils.onSubtypeChanged(oldSubtype, subtype);
-        mRichImm.onSubtypeChanged(subtype);
-        mInputLogic.onSubtypeChanged(SubtypeLocaleUtils.getCombiningRulesExtraValue(subtype),
-                mSettings.getCurrent());
-        loadKeyboard();
+        try {
+            // Note that the calling sequence of onCreate() and
+            // onCurrentInputMethodSubtypeChanged()
+            // is not guaranteed. It may even be called at the same time on a different
+            // thread.
+            if (subtype == null) {
+                Log.e(TAG, "onCurrentInputMethodSubtypeChanged: subtype is null");
+                return;
+            }
+            if (mRichImm == null) {
+                Log.e(TAG, "onCurrentInputMethodSubtypeChanged: mRichImm is null");
+                return;
+            }
+            if (mRichImm.getCurrentSubtype() == null) {
+                Log.e(TAG, "onCurrentInputMethodSubtypeChanged: currentSubtype is null");
+                return;
+            }
+
+            InputMethodSubtype oldSubtype = mRichImm.getCurrentSubtype().getRawSubtype();
+            StatsUtils.onSubtypeChanged(oldSubtype, subtype);
+            mRichImm.onSubtypeChanged(subtype);
+            mInputLogic.onSubtypeChanged(SubtypeLocaleUtils.getCombiningRulesExtraValue(subtype),
+                    mSettings.getCurrent());
+            loadKeyboard();
+        } catch (Exception e) {
+            Log.e(TAG, "Error in onCurrentInputMethodSubtypeChanged: " + e.getMessage(), e);
+        }
     }
 
     void onStartInputInternal(final EditorInfo editorInfo, final boolean restarting) {
@@ -1594,28 +1629,37 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
     }
 
     private void updateSoftInputWindowLayoutParameters() {
-        // Override layout parameters to expand {@link SoftInputWindow} to the entire
-        // screen.
-        // See {@link InputMethodService#setinputView(View)} and
-        // {@link SoftInputWindow#updateWidthHeight(WindowManager.LayoutParams)}.
-        final Window window = getWindow().getWindow();
-        ViewLayoutUtils.updateLayoutHeightOf(window, LayoutParams.MATCH_PARENT);
-        // This method may be called before {@link #setInputView(View)}.
-        if (mInputView != null) {
-            // In non-fullscreen mode, {@link InputView} and its parent inputArea should
-            // expand to
-            // the entire screen and be placed at the bottom of {@link SoftInputWindow}.
-            // In fullscreen mode, these shouldn't expand to the entire screen and should be
-            // coexistent with {@link #mExtractedArea} above.
-            // See {@link InputMethodService#setInputView(View) and
-            // com.android.internal.R.layout.input_method.xml.
-            final int layoutHeight = isFullscreenMode()
-                    ? LayoutParams.WRAP_CONTENT
-                    : LayoutParams.MATCH_PARENT;
-            final View inputArea = window.findViewById(android.R.id.inputArea);
-            ViewLayoutUtils.updateLayoutHeightOf(inputArea, layoutHeight);
-            ViewLayoutUtils.updateLayoutGravityOf(inputArea, Gravity.BOTTOM);
-            ViewLayoutUtils.updateLayoutHeightOf(mInputView, layoutHeight);
+        try {
+            // Override layout parameters to expand {@link SoftInputWindow} to the entire
+            // screen.
+            // See {@link InputMethodService#setinputView(View)} and
+            // {@link SoftInputWindow#updateWidthHeight(WindowManager.LayoutParams)}.
+            final Window window = getWindow().getWindow();
+            if (window == null) {
+                Log.e(TAG, "updateSoftInputWindowLayoutParameters: window is null");
+                return;
+            }
+
+            ViewLayoutUtils.updateLayoutHeightOf(window, LayoutParams.MATCH_PARENT);
+            // This method may be called before {@link #setInputView(View)}.
+            if (mInputView != null) {
+                // In non-fullscreen mode, {@link InputView} and its parent inputArea should
+                // expand to
+                // the entire screen and be placed at the bottom of {@link SoftInputWindow}.
+                // In fullscreen mode, these shouldn't expand to the entire screen and should be
+                // coexistent with {@link #mExtractedArea} above.
+                // See {@link InputMethodService#setInputView(View) and
+                // com.android.internal.R.layout.input_method.xml.
+                final int layoutHeight = isFullscreenMode()
+                        ? LayoutParams.WRAP_CONTENT
+                        : LayoutParams.MATCH_PARENT;
+                final View inputArea = window.findViewById(android.R.id.inputArea);
+                ViewLayoutUtils.updateLayoutHeightOf(inputArea, layoutHeight);
+                ViewLayoutUtils.updateLayoutGravityOf(inputArea, Gravity.BOTTOM);
+                ViewLayoutUtils.updateLayoutHeightOf(mInputView, layoutHeight);
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Error in updateSoftInputWindowLayoutParameters: " + e.getMessage(), e);
         }
     }
 
@@ -1716,19 +1760,51 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
     }
 
     public void switchLanguage(final InputMethodSubtype subtype) {
-        final IBinder token = getWindow().getWindow().getAttributes().token;
-        mRichImm.setInputMethodAndSubtype(token, subtype);
+        try {
+            if (subtype == null) {
+                Log.e(TAG, "switchLanguage: subtype is null");
+                return;
+            }
+            if (getWindow() == null) {
+                Log.e(TAG, "switchLanguage: window is null");
+                return;
+            }
+
+            final IBinder token = getWindow().getWindow().getAttributes().token;
+            if (token == null) {
+                Log.e(TAG, "switchLanguage: token is null");
+                return;
+            }
+
+            mRichImm.setInputMethodAndSubtype(token, subtype);
+        } catch (Exception e) {
+            Log.e(TAG, "Error in switchLanguage: " + e.getMessage(), e);
+        }
     }
 
     // TODO: Revise the language switch key behavior to make it much smarter and
     // more reasonable.
     public void switchToNextSubtype() {
-        final IBinder token = getWindow().getWindow().getAttributes().token;
-        if (shouldSwitchToOtherInputMethods()) {
-            mRichImm.switchToNextInputMethod(token, true /* onlyCurrentIme */);
-            return;
+        try {
+            if (getWindow() == null) {
+                Log.e(TAG, "switchToNextSubtype: window is null");
+                return;
+            }
+
+            final IBinder token = getWindow().getWindow().getAttributes().token;
+            if (token == null) {
+                Log.e(TAG, "switchToNextSubtype: token is null");
+                return;
+            }
+
+            if (shouldSwitchToOtherInputMethods()) {
+                mRichImm.switchToNextInputMethod(token, true /* onlyCurrentIme */);
+                return;
+            }
+            mSubtypeState.switchSubtype(token, mRichImm);
+        } catch (Exception e) {
+            Log.e(TAG, "Error in switchToNextSubtype: " + e.getMessage(), e);
         }
-        mSubtypeState.switchSubtype(token, mRichImm);
     }
 
     // TODO: Instead of checking for alphabetic keyboard here, separate keycodes for
@@ -2353,11 +2429,19 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
         // {@link InputMethodManager#shouldOfferSwitchingToNextInputMethod} is defined
         // well.
         final boolean fallbackValue = mSettings.getCurrent().mIncludesOtherImesInLanguageSwitchList;
-        final IBinder token = getWindow().getWindow().getAttributes().token;
-        if (token == null) {
+        try {
+            if (getWindow() == null) {
+                return fallbackValue;
+            }
+            final IBinder token = getWindow().getWindow().getAttributes().token;
+            if (token == null) {
+                return fallbackValue;
+            }
+            return mRichImm.shouldOfferSwitchingToNextInputMethod(token, fallbackValue);
+        } catch (Exception e) {
+            Log.e(TAG, "Error in shouldSwitchToOtherInputMethods: " + e.getMessage(), e);
             return fallbackValue;
         }
-        return mRichImm.shouldOfferSwitchingToNextInputMethod(token, fallbackValue);
     }
 
     public boolean shouldShowLanguageSwitchKey() {
@@ -2371,11 +2455,17 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
 
     private void setNavigationBarVisibility(final boolean visible) {
         if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) {
-            // For N and later, IMEs can specify Color.TRANSPARENT to make the navigation
-            // bar
-            // transparent. For other colors the system uses the default color.
-            getWindow().getWindow().setNavigationBarColor(
-                    visible ? Color.BLACK : Color.TRANSPARENT);
+            try {
+                // For N and later, IMEs can specify Color.TRANSPARENT to make the navigation
+                // bar
+                // transparent. For other colors the system uses the default color.
+                if (getWindow() != null) {
+                    getWindow().getWindow().setNavigationBarColor(
+                            visible ? Color.BLACK : Color.TRANSPARENT);
+                }
+            } catch (Exception e) {
+                Log.e(TAG, "Error in setNavigationBarVisibility: " + e.getMessage(), e);
+            }
         }
     }
 }
