@@ -25,9 +25,43 @@ class AutoTextRepository(private val context: Context) {
         save(list)
     }
 
+    /**
+     * Update an existing entry identified by [oldShortcut]. If the [updated.shortcut]
+     * belongs to another entry (case-insensitive), no change is made and false is returned.
+     */
+    fun update(oldShortcut: String, updated: AutoTextEntry): Boolean {
+        val list = getAll().toMutableList()
+        val oldIndex = list.indexOfFirst { it.shortcut.equals(oldShortcut, ignoreCase = true) }
+        if (oldIndex < 0) return false
+        // If shortcut changed, ensure uniqueness against all other entries
+        val isSameShortcut = updated.shortcut.equals(oldShortcut, ignoreCase = true)
+        if (!isSameShortcut) {
+            val clash = list.anyIndexed { index, it ->
+                index != oldIndex && it.shortcut.equals(updated.shortcut, ignoreCase = true)
+            }
+            if (clash) return false
+        }
+        list[oldIndex] = updated
+        save(list)
+        return true
+    }
+
+    private inline fun <T> List<T>.anyIndexed(predicate: (index: Int, T) -> Boolean): Boolean {
+        for (i in indices) if (predicate(i, this[i])) return true
+        return false
+    }
+
     private fun save(list: List<AutoTextEntry>) {
         val raw = list.joinToString("\u0001") { it.shortcut + "\u0002" + it.message }
         prefs.edit().putString("entries", raw).apply()
+    }
+
+    fun removeMany(shortcuts: Collection<String>) {
+        if (shortcuts.isEmpty()) return
+        val list = getAll().filterNot { e ->
+            shortcuts.any { it.equals(e.shortcut, ignoreCase = true) }
+        }
+        save(list)
     }
 }
 

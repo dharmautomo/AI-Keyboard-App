@@ -2,9 +2,9 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="#66000000"
     android:gravity="center"
-    android:orientation="vertical"
-    android:background="#66000000">
+    android:orientation="vertical">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -15,40 +15,12 @@
         android:padding="16dp">
 
         <TextView
-            android:id="@+id/title"
+            android:id="@+id/txt_message"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/auto_text_add"
             android:textColor="@android:color/white"
-            android:textSize="18sp"
-            android:layout_marginBottom="12dp"/>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/auto_text_shortcut"
-            android:textColor="#B3FFFFFF"/>
-        <EditText
-            android:id="@+id/et_shortcut"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="hi"
-            android:textColor="@android:color/white"
-            android:textColorHint="#66FFFFFF"/>
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/auto_text_message"
-            android:layout_marginTop="12dp"
-            android:textColor="#B3FFFFFF"/>
-        <EditText
-            android:id="@+id/et_message"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Hi, how are you?"
-            android:textColor="@android:color/white"
-            android:textColorHint="#66FFFFFF"/>
+            android:textSize="16sp"
+            android:text="Are you sure?"/>
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -63,10 +35,10 @@
                 android:text="@string/cancel"
                 android:textAllCaps="false"/>
             <Button
-                android:id="@+id/btn_add"
+                android:id="@+id/btn_ok"
                 android:layout_width="wrap_content"
                 android:layout_height="40dp"
-                android:text="@string/add"
+                android:text="@string/delete_dict"
                 android:textAllCaps="false"
                 android:layout_marginLeft="12dp"/>
         </LinearLayout>
@@ -74,5 +46,6 @@
     </LinearLayout>
 
 </LinearLayout>
+
 
 

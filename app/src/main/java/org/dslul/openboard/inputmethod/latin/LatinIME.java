@@ -903,7 +903,40 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
         CharSequence after = mInputLogic.mConnection.getTextAfterCursor(2048, 0);
         CharSequence selected = mInputLogic.mConnection.getSelectedText(0);
 
-        // Bridge to Kotlin controller
+        // Special handling for IMPROVE: select all, call provider, then show overlay to replace text
+        if (action == org.dslul.openboard.inputmethod.latin.ai.AiProvider.Action.IMPROVE) {
+            try {
+                final CharSequence fullBefore = mInputLogic.mConnection.getTextBeforeCursor(10000, 0);
+                final CharSequence fullAfter = mInputLogic.mConnection.getTextAfterCursor(10000, 0);
+                final int start = 0;
+                final int end = (fullBefore != null ? fullBefore.length() : 0) + (fullAfter != null ? fullAfter.length() : 0);
+                mInputLogic.mConnection.setSelection(start, end);
+            } catch (Throwable ignored) {}
+
+            org.dslul.openboard.inputmethod.latin.ai.AiActionController controller =
+                    new org.dslul.openboard.inputmethod.latin.ai.AiActionController(
+                            new org.dslul.openboard.inputmethod.latin.ai.AiProviderOpenAI(),
+                            content -> {
+                                getMainLooper().getQueue().addIdleHandler(() -> {
+                                    showImproveOverlay(content);
+                                    return false;
+                                });
+                                return kotlin.Unit.INSTANCE;
+                            },
+                            progress -> { return kotlin.Unit.INSTANCE; }
+                    );
+            controller.run(
+                    action,
+                    before != null ? before.toString() : "",
+                    selected != null ? selected.toString() : null,
+                    after != null ? after.toString() : "",
+                    null,
+                    "You are an AI writing assistant. Improve the following text for grammar, clarity, and style while keeping the original meaning."
+            );
+            return;
+        }
+
+        // Bridge to Kotlin controller (default behavior)
         org.dslul.openboard.inputmethod.latin.ai.AiActionController controller =
                 new org.dslul.openboard.inputmethod.latin.ai.AiActionController(
                         new org.dslul.openboard.inputmethod.latin.ai.AiProviderOpenAI(),
@@ -931,6 +964,26 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
                 null,
                 null
         );
+    }
+
+    private void showImproveOverlay(final String improvedText) {
+        if (mInputView == null) return;
+        // Attach overlay inside the input window root container (safe placement)
+        final android.view.ViewGroup root = mInputView instanceof android.view.ViewGroup
+                ? (android.view.ViewGroup) mInputView
+                : (android.view.ViewGroup) getWindow().getWindow().getDecorView();
+        final android.view.LayoutInflater inflater = android.view.LayoutInflater.from(this);
+        final android.view.View overlay = inflater.inflate(org.dslul.openboard.inputmethod.latin.R.layout.improve_overlay, root, false);
+        final android.widget.TextView tv = overlay.findViewById(org.dslul.openboard.inputmethod.latin.R.id.txt_improved);
+        tv.setText(improvedText);
+        overlay.findViewById(org.dslul.openboard.inputmethod.latin.R.id.btn_back).setOnClickListener(v -> {
+            root.removeView(overlay);
+        });
+        overlay.findViewById(org.dslul.openboard.inputmethod.latin.R.id.btn_replace).setOnClickListener(v -> {
+            mInputLogic.mConnection.commitText(improvedText, 1);
+            root.removeView(overlay);
+        });
+        root.addView(overlay);
     }
 
     @Override
@@ -1130,6 +1183,18 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
                 // later call will be done in #retryResetCaches.
                 switcher.saveKeyboardState();
             }
+            // Ensure AI/Auto Text action strip visibility matches the current keyboard mode
+            // immediately on start (e.g., hide in number/phone/date/time layouts).
+            try {
+                final Keyboard currentKeyboard = switcher.getKeyboard();
+                final View aiStrip = mInputView != null ? mInputView.findViewById(R.id.ai_action_strip) : null;
+                if (aiStrip != null && currentKeyboard != null) {
+                    final boolean isAlphabet = currentKeyboard.mId.isAlphabetKeyboard();
+                    aiStrip.setVisibility(isAlphabet ? View.VISIBLE : View.GONE);
+                    // Update window insets so the host app content isn't obscured/over-inset.
+                    updateSoftInputWindowLayoutParameters();
+                }
+            } catch (Throwable ignored) {}
         } else if (restarting) {
             // TODO: Come up with a more comprehensive way to reset the keyboard layout when
             // a keyboard layout set doesn't get reloaded in this method.
@@ -1141,6 +1206,16 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
             // Space state must be updated before calling updateShiftState
             switcher.requestUpdatingShiftState(getCurrentAutoCapsState(),
                     getCurrentRecapitalizeState());
+            // Also synchronize action strip visibility when restarting.
+            try {
+                final Keyboard currentKeyboard = switcher.getKeyboard();
+                final View aiStrip = mInputView != null ? mInputView.findViewById(R.id.ai_action_strip) : null;
+                if (aiStrip != null && currentKeyboard != null) {
+                    final boolean isAlphabet = currentKeyboard.mId.isAlphabetKeyboard();
+                    aiStrip.setVisibility(isAlphabet ? View.VISIBLE : View.GONE);
+                    updateSoftInputWindowLayoutParameters();
+                }
+            } catch (Throwable ignored) {}
         }
         // This will set the punctuation suggestions if next word suggestion is off;
         // otherwise it will clear the suggestion strip.
@@ -1612,8 +1687,12 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
             final Keyboard currentKeyboard = mKeyboardSwitcher.getKeyboard();
             final View aiStrip = mInputView != null ? mInputView.findViewById(R.id.ai_action_strip) : null;
             if (aiStrip != null && currentKeyboard != null) {
-                final boolean isAlphabet = currentKeyboard.mId.isAlphabetKeyboard();
-                aiStrip.setVisibility(isAlphabet ? View.VISIBLE : View.GONE);
+                final int mode = currentKeyboard.mId.mMode;
+                final boolean isTextMode = (mode == org.dslul.openboard.inputmethod.keyboard.KeyboardId.MODE_TEXT
+                        || mode == org.dslul.openboard.inputmethod.keyboard.KeyboardId.MODE_EMAIL
+                        || mode == org.dslul.openboard.inputmethod.keyboard.KeyboardId.MODE_URL
+                        || mode == org.dslul.openboard.inputmethod.keyboard.KeyboardId.MODE_IM);
+                aiStrip.setVisibility(isTextMode ? View.VISIBLE : View.GONE);
             }
         } catch (Throwable ignored) {}
     }
@@ -1725,7 +1804,23 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
             return;
         }
 
-        // Determine if we should force-show the strip for Templates
+        // If current keyboard is non-alphabet (number/phone/date/time), always hide the strip
+        try {
+            final Keyboard currentKeyboard = mKeyboardSwitcher.getKeyboard();
+            if (currentKeyboard != null) {
+                final int mode = currentKeyboard.mId.mMode;
+                final boolean isTextMode = (mode == org.dslul.openboard.inputmethod.keyboard.KeyboardId.MODE_TEXT
+                        || mode == org.dslul.openboard.inputmethod.keyboard.KeyboardId.MODE_EMAIL
+                        || mode == org.dslul.openboard.inputmethod.keyboard.KeyboardId.MODE_URL
+                        || mode == org.dslul.openboard.inputmethod.keyboard.KeyboardId.MODE_IM);
+                if (!isTextMode) {
+                    mSuggestionStripView.updateVisibility(false, isFullscreenMode());
+                    return;
+                }
+            }
+        } catch (Throwable ignored) {}
+
+        // Determine if we should force-show the strip for Templates (now guarded by non-empty tail)
         org.dslul.openboard.inputmethod.latin.ai.TemplateSuggester tsForVisibility =
                 org.dslul.openboard.inputmethod.latin.ai.TemplateSuggester.INSTANCE;
         CharSequence beforeForVisibility = mInputLogic.mConnection.getTextBeforeCursor(64, 0);

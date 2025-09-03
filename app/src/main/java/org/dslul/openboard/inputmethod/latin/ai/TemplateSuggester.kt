@@ -23,6 +23,8 @@ object TemplateSuggester {
      */
     fun suggestionsFor(textBeforeCursor: CharSequence?, max: Int = 3): SuggestedWords? {
         val tail = lastToken(textBeforeCursor?.toString().orEmpty())
+        // Do not show any auto text suggestions until user starts typing something.
+        if (tail.isEmpty()) return null
         val ctx = org.dslul.openboard.inputmethod.latin.LatinIME.sInstance
         val repoEntries = try {
             if (ctx != null) org.dslul.openboard.inputmethod.latin.autotext.AutoTextRepository(ctx).getAll()
@@ -30,7 +32,7 @@ object TemplateSuggester {
         } catch (_: Throwable) { emptyList() }
         val repoTemplates = repoEntries.map { Template(it.shortcut, it.message) }
         val all = templates + repoTemplates
-        val matches = if (tail.isEmpty()) repoTemplates else all.filter { it.trigger.startsWith(tail, ignoreCase = true) }
+        val matches = all.filter { it.trigger.startsWith(tail, ignoreCase = true) }
         if (matches.isEmpty()) return null
 
         val infos = matches.take(max).map {
