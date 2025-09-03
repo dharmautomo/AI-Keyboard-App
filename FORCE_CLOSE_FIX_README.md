@@ -1,234 +1,228 @@
-# Perbaikan Force Close pada Input Method Selection dan Setup Wizard
+# FORCE CLOSE FIX - Setup Wizard Step 2 to Step 3
 
-## Masalah yang Diatasi
+## Masalah yang Ditemukan
 
-### 1. Input Method Selection Force Close
+Setelah analisis mendalam terhadap kode `SetupWizardActivity.java`, ditemukan beberapa masalah potensial yang dapat menyebabkan force close saat transisi dari step 2 ke step 3:
 
-Aplikasi mengalami force close ketika user memilih opsi "Indonesia Lancar" dari dialog input method selection. Masalah ini disebabkan oleh:
+### 1. **Race Condition dalam Handler Polling**
 
-1. **Error handling yang tidak memadai** pada method `setInputMethodAndSubtype`
-2. **Permission issues** saat mengakses input method manager
-3. **Null pointer exceptions** pada token atau context
-4. **Security exceptions** saat mengubah input method
-5. **Method access errors** pada window attributes dan navigation bar color
+- `SettingsPoolingHandler` melakukan polling setiap 200ms untuk memeriksa status IME
+- Saat user berada di step 2 dan memilih input method, handler dapat memanggil `invokeSetupWizardOfThisIme()`
+- Ini dapat menyebabkan konflik dengan transisi normal antar step
 
-### 2. Setup Wizard Step 3 Force Close (ROOT CAUSE IDENTIFIED)
+### 2. **Null Pointer Exception dalam SetupStep.setEnabled()**
 
-Aplikasi mengalami force close pada screen setup step 3 ketika user mengklik "Configure additional languages". **ROOT CAUSE** yang sebenarnya adalah:
+- Method `setEnabled()` tidak melakukan null check yang cukup untuk `mStepView`, `mBulletView`, dan `mActionLabel`
+- Jika salah satu view tidak ditemukan, dapat menyebabkan crash
 
-1. **IPC Round Trip Failures** pada `imm.getInputMethodList()` dan `imm.getEnabledInputMethodList()`
-2. **Settings.Secure Access Failures** pada `Settings.Secure.DEFAULT_INPUT_METHOD`
-3. **InputMethodInfo ID Null** pada `imi.getId()` yang mengembalikan null
-4. **AlertDialog Creation Failures** pada `new AlertDialog.Builder(this)`
-5. **Activity State Issues** pada `isFinishing()` dan `isDestroyed()` checks
-6. **Handler Null Reference** pada `mHandler.cancelPollingImeSettings()`
+### 3. **Error dalam determineSetupStepNumber()**
 
-## Solusi yang Diterapkan
+- Method ini memanggil `UncachedInputMethodManagerUtils.isThisImeCurrent()` yang dapat menyebabkan IPC round trip
+- Jika ada masalah dengan system settings atau permissions, dapat menyebabkan exception
 
-### 1. Enhanced Error Handling pada Input Method Operations
+### 4. **View Visibility Issues**
 
-Menambahkan try-catch blocks dan validasi parameter pada method-method kritis:
+- Saat transisi ke step 3, `updateSetupStepView()` memanggil `mSetupStepGroup.enableStep()`
+- Jika ada masalah dengan view hierarchy atau step group, dapat menyebabkan crash
 
-- `RichInputMethodManager.setInputMethodAndSubtype()`
-- `RichInputMethodManager.switchToTargetIME()`
-- `LatinIME.switchSubtype()`
-- `LatinIME.switchLanguage()`
-- `LatinIME.switchToNextSubtype()`
-- `LatinIME.onCurrentInputMethodSubtypeChanged()`
+## Solusi yang Diimplementasikan
 
-### 2. Enhanced Error Handling pada Setup Wizard (ROOT CAUSE FIXES)
+### 1. **Enhanced Error Handling dalam SetupStep.setEnabled()**
 
-Menambahkan robust error handling pada semua method setup wizard dengan fokus pada root cause:
+```java
+public void setEnabled(final boolean enabled, final boolean isStepActionAlreadyDone) {
+    try {
+        // Null checks untuk semua view
+        if (mStepView == null) {
+            Log.e("SetupStep", "setEnabled: mStepView is null");
+            return;
+        }
 
-#### **Core Method Fixes:**
+        if (mBulletView == null) {
+            Log.e("SetupStep", "setEnabled: mBulletView is null");
+            return;
+        }
 
-- `SetupWizardActivity.invokeSubtypeEnablerOfThisIme()` - **ROOT CAUSE METHOD** dengan validasi InputMethodInfo ID
-- `SetupWizardActivity.showSubtypeEnablerUnavailableDialog()` - Safe AlertDialog creation dengan fallback
-- `SetupWizardActivity.determineSetupStepNumber()` - Safe handler access dan utility method calls
+        if (mActionLabel == null) {
+            Log.e("SetupStep", "setEnabled: mActionLabel is null");
+            return;
+        }
 
-#### **Lifecycle Method Fixes:**
+        // Safe view operations dengan try-catch individual
+        try {
+            mStepView.setVisibility(enabled ? View.VISIBLE : View.GONE);
+        } catch (Exception e) {
+            Log.e("SetupStep", "Error setting step view visibility: " + e.getMessage(), e);
+        }
 
-- `SetupWizardActivity.onCreate()` - View initialization dan setup
-- `SetupWizardActivity.invokeLanguageAndInputSettings()` - Language settings
-- `SetupWizardActivity.invokeInputMethodPicker()` - Input method picker
-- `SetupWizardActivity.updateSetupStepView()` - UI update
-- `SetupWizardActivity.onResume()` - Activity lifecycle
-- `SetupWizardActivity.onRestart()` - Activity restart
-- `SetupWizardActivity.onPause()` - Activity pause
-- `SetupWizardActivity.onBackPressed()` - Back button handling
-- `SetupWizardActivity.onClick()` - User interaction
-- `SetupWizardActivity.onWindowFocusChanged()` - Window focus
-- `SetupWizardActivity.onSaveInstanceState()` - State saving
-- `SetupWizardActivity.onRestoreInstanceState()` - State restoration
+        // ... additional safe operations
+    } catch (Exception e) {
+        Log.e("SetupStep", "Error in setEnabled: " + e.getMessage(), e);
+    }
+}
+```
 
-### 3. Enhanced Error Handling pada Utility Classes (ROOT CAUSE FIXES)
+### 2. **Safe Handler Access dalam SettingsPoolingHandler**
 
-Menambahkan error handling yang lebih robust pada utility classes dengan fokus pada IPC failures:
+```java
+@Override
+public void handleMessage(final Message msg) {
+    try {
+        final SetupWizardActivity setupWizardActivity = getOwnerInstance();
+        if (setupWizardActivity == null) {
+            Log.w("SettingsPoolingHandler", "handleMessage: owner instance is null");
+            return;
+        }
 
-#### **UncachedInputMethodManagerUtils Fixes:**
+        if (setupWizardActivity.isFinishing() || setupWizardActivity.isDestroyed()) {
+            Log.w("SettingsPoolingHandler", "handleMessage: activity is finishing or destroyed");
+            return;
+        }
 
-- `getInputMethodInfoOf()` - **ROOT CAUSE METHOD** dengan safe `imm.getInputMethodList()` calls
-- `isThisImeEnabled()` - **ROOT CAUSE METHOD** dengan safe `imm.getEnabledInputMethodList()` calls
-- `isThisImeCurrent()` - **ROOT CAUSE METHOD** dengan safe `Settings.Secure` access
+        // Safe message handling
+        switch (msg.what) {
+        case MSG_POLLING_IME_SETTINGS:
+            try {
+                if (UncachedInputMethodManagerUtils.isThisImeEnabled(setupWizardActivity, mImmInHandler)) {
+                    setupWizardActivity.invokeSetupWizardOfThisIme();
+                    return;
+                }
+                startPollingImeSettings();
+            } catch (Exception e) {
+                Log.e("SettingsPoolingHandler", "Error in MSG_POLLING_IME_SETTINGS: " + e.getMessage(), e);
+                cancelPollingImeSettings();
+            }
+            break;
+        }
+    } catch (Exception e) {
+        Log.e("SettingsPoolingHandler", "Critical error in handleMessage: " + e.getMessage(), e);
+        cancelPollingImeSettings();
+    }
+}
+```
 
-### 4. Enhanced Error Handling pada Video/Media Operations
+### 3. **Safe SetupStepGroup.enableStep()**
 
-Menambahkan robust error handling pada media operations:
+```java
+public void enableStep(final int enableStepNo, final boolean isStepActionAlreadyDone) {
+    try {
+        if (mIndicatorView == null) {
+            Log.e("SetupStepGroup", "enableStep: mIndicatorView is null");
+            return;
+        }
 
-- `hideWelcomeVideoAndShowWelcomeImage()` - Video to image fallback
-- `showAndStartWelcomeVideo()` - Video playback dengan fallback
-- `hideAndStopWelcomeVideo()` - Safe video stopping
+        if (mGroup == null || mGroup.isEmpty()) {
+            Log.e("SetupStepGroup", "enableStep: mGroup is null or empty");
+            return;
+        }
 
-### 5. Fallback Mechanisms (ROOT CAUSE PREVENTION)
+        for (final SetupStep step : mGroup) {
+            try {
+                if (step != null) {
+                    step.setEnabled(step.mStepNo == enableStepNo, isStepActionAlreadyDone);
+                }
+            } catch (Exception e) {
+                Log.e("SetupStepGroup", "Error enabling step " + (step != null ? step.mStepNo : "null") + ": " + e.getMessage(), e);
+            }
+        }
 
-Implementasi fallback mechanisms untuk mencegah crash pada root cause scenarios:
+        try {
+            mIndicatorView.setIndicatorPosition(enableStepNo - STEP_1, mGroup.size());
+        } catch (Exception e) {
+            Log.e("SetupStepGroup", "Error setting indicator position: " + e.getMessage(), e);
+        }
+    } catch (Exception e) {
+        Log.e("SetupStepGroup", "Error in enableStep: " + e.getMessage(), e);
+    }
+}
+```
 
-- **IPC Failure Fallbacks**: Safe handling untuk `imm.getInputMethodList()` failures
-- **Settings.Secure Fallbacks**: Safe handling untuk `Settings.Secure.DEFAULT_INPUT_METHOD` access
-- **InputMethodInfo Validation**: Validasi `imi.getId()` sebelum digunakan
-- **AlertDialog Fallbacks**: Toast fallback jika dialog creation gagal
-- **Activity State Validation**: `isFinishing()` dan `isDestroyed()` checks
-- **Handler Null Safety**: Safe access untuk `mHandler` operations
-- **Intent Resolution Check**: Memverifikasi intent dapat di-resolve sebelum `startActivity()`
-- **Graceful Degradation**: Kembali ke welcome screen jika terjadi error
-- **User Feedback**: Memberikan feedback yang jelas kepada user
-- **Activity Finishing**: Finish activity jika terjadi critical error
-- **View Validation**: Validasi semua view sebelum digunakan
-- **Media Fallback**: Fallback ke image jika video gagal
+### 4. **Enhanced determineSetupStepNumber()**
 
-### 6. Comprehensive Logging (ROOT CAUSE DEBUGGING)
+```java
+private int determineSetupStepNumber() {
+    try {
+        if (mHandler != null) {
+            try {
+                mHandler.cancelPollingImeSettings();
+            } catch (Exception e) {
+                Log.e(TAG, "Error canceling polling IME settings: " + e.getMessage(), e);
+            }
+        }
 
-Menambahkan comprehensive logging untuk debugging root cause:
+        if (FORCE_TO_SHOW_WELCOME_SCREEN) {
+            return STEP_1;
+        }
+        if (mImm == null) {
+            Log.e(TAG, "determineSetupStepNumber: InputMethodManager is null");
+            return STEP_1;
+        }
 
-- Error details dengan stack trace
-- Parameter validation failures
-- Security exception details
-- IPC failure details
-- Settings.Secure access failures
-- InputMethodInfo validation failures
-- AlertDialog creation failures
-- Activity state validation failures
-- Handler operation failures
-- Fallback action logging
-- Lifecycle method errors
-- View initialization failures
+        boolean isEnabled = false;
+        try {
+            isEnabled = UncachedInputMethodManagerUtils.isThisImeEnabled(this, mImm);
+        } catch (Exception e) {
+            Log.e(TAG, "Error checking if IME is enabled: " + e.getMessage(), e);
+            return STEP_1;
+        }
+
+        if (!isEnabled) {
+            return STEP_1;
+        }
+
+        boolean isCurrent = false;
+        try {
+            isCurrent = UncachedInputMethodManagerUtils.isThisImeCurrent(this, mImm);
+        } catch (Exception e) {
+            Log.e(TAG, "Error checking if IME is current: " + e.getMessage(), e);
+            return STEP_1;
+        }
+
+        if (!isCurrent) {
+            return STEP_2;
+        }
+        return STEP_3;
+    } catch (SecurityException e) {
+        Log.e(TAG, "SecurityException in determineSetupStepNumber: " + e.getMessage(), e);
+        return STEP_1;
+    } catch (Exception e) {
+        Log.e(TAG, "Unexpected error in determineSetupStepNumber: " + e.getMessage(), e);
+        return STEP_1;
+    }
+}
+```
+
+## Langkah-Langkah Testing
+
+### 1. **Test Transisi Step 2 → Step 3**
+
+- Jalankan setup wizard
+- Selesaikan step 1 (enable IME)
+- Selesaikan step 2 (switch to IME)
+- Pastikan transisi ke step 3 berhasil tanpa crash
+
+### 2. **Test Error Scenarios**
+
+- Test dengan IME yang tidak ter-enable
+- Test dengan permissions yang dibatasi
+- Test dengan system settings yang bermasalah
+
+### 3. **Monitor Logcat**
+
+- Perhatikan error messages yang muncul
+- Pastikan semua exception ditangani dengan baik
+- Verifikasi bahwa fallback mechanisms berfungsi
 
 ## File yang Dimodifikasi
 
-### Core Input Method Files
-
-- `app/src/main/java/org/dslul/openboard/inputmethod/latin/RichInputMethodManager.java`
-
-### Setup Wizard Files
-
-- `app/src/main/java/org/dslul/openboard/inputmethod/latin/setup/SetupWizardActivity.java` - **ROOT CAUSE FIXES**
-
-### Utility Files
-
-- `app/src/main/java/org/dslul/openboard/inputmethod/latin/utils/UncachedInputMethodManagerUtils.java` - **ROOT CAUSE FIXES**
-- `app/src/main/java/org/dslul/openboard/inputmethod/latin/utils/InputMethodErrorHandler.java`
-
-## Cara Kerja Perbaikan
-
-### 1. Input Method Selection
-
-- Validasi semua parameter sebelum eksekusi
-- Try-catch blocks untuk semua method kritis
-- Fallback ke state sebelumnya jika terjadi error
-- Logging detail untuk debugging
-
-### 2. Setup Wizard (ROOT CAUSE FIXES)
-
-- **IPC Safety**: Safe handling untuk semua IPC calls (`imm.getInputMethodList()`, `imm.getEnabledInputMethodList()`)
-- **Settings.Secure Safety**: Safe access untuk `Settings.Secure.DEFAULT_INPUT_METHOD`
-- **InputMethodInfo Validation**: Validasi `imi.getId()` sebelum digunakan dalam intent
-- **AlertDialog Safety**: Safe dialog creation dengan multiple fallback mechanisms
-- **Activity State Safety**: Validasi `isFinishing()` dan `isDestroyed()` sebelum UI operations
-- **Handler Safety**: Safe access untuk `mHandler` operations
-- **View Initialization**: Validasi semua view sebelum digunakan
-- **Lifecycle Methods**: Error handling pada semua lifecycle methods
-- **User Interactions**: Safe handling pada semua user interactions
-- **Media Operations**: Fallback mechanisms untuk video/media
-- **State Management**: Safe state saving dan restoration
-- **Intent Handling**: Validasi intent sebelum eksekusi
-- **Fallback Mechanisms**: Graceful degradation jika terjadi error
-
-### 3. Utility Classes (ROOT CAUSE FIXES)
-
-- **IPC Safety**: Try-catch blocks untuk semua IPC operations
-- **Settings.Secure Safety**: Safe access untuk system settings
-- **Null Safety**: Comprehensive null checks untuk semua parameters
-- **Fallback Values**: Safe return values untuk method yang gagal
-- **Detailed Error Logging**: Comprehensive logging untuk debugging
-
-## Testing
-
-### Build Verification
-
-- ✅ `./gradlew assembleDebug` berhasil
-- ✅ Tidak ada compilation errors
-- ✅ Semua dependencies resolved
-- ✅ View IDs yang benar digunakan
-- ✅ Root cause fixes implemented
-
-### Expected Behavior
-
-1. **Input Method Selection**: Tidak ada force close, error handling yang graceful
-2. **Setup Wizard Step 3**: **TIDAK ADA FORCE CLOSE** - Root cause telah diperbaiki
-3. **Setup Wizard Lifecycle**: Tidak ada crash pada semua lifecycle methods
-4. **IPC Operations**: Safe handling untuk semua IPC calls
-5. **Settings.Secure Access**: Safe access untuk system settings
-6. **AlertDialog Creation**: Safe dialog creation dengan fallback
-7. **Video/Media Handling**: Fallback ke image jika video gagal
-8. **Error Logging**: Comprehensive logging untuk debugging
-9. **User Experience**: Feedback yang jelas dan tidak ada crash
-
-## Monitoring dan Debugging
-
-### Log Tags
-
-- `InputMethodErrorHandler`: Error handling pada input method operations
-- `SetupWizardActivity`: Setup wizard error handling dengan root cause fixes
-- `UncachedInputMethodManagerUtils`: Utility class error handling dengan IPC safety
-
-### Key Error Scenarios (ROOT CAUSE COVERED)
-
-1. **SecurityException**: Permission denied untuk input method operations
-2. **NullPointerException**: Parameter atau object yang null
-3. **IPC Failures**: **ROOT CAUSE** - InputMethodManager service tidak tersedia
-4. **Settings.Secure Failures**: **ROOT CAUSE** - System settings access failures
-5. **InputMethodInfo ID Null**: **ROOT CAUSE** - `imi.getId()` mengembalikan null
-6. **AlertDialog Creation Failures**: **ROOT CAUSE** - Dialog creation failures
-7. **Activity State Issues**: **ROOT CAUSE** - Activity finishing/destroyed state
-8. **Handler Null Reference**: **ROOT CAUSE** - Handler null reference
-9. **Intent Resolution Failures**: Activity target tidak ditemukan
-10. **View Initialization Failures**: View tidak ditemukan atau null
-11. **Lifecycle Method Crashes**: Error pada activity lifecycle
-12. **Media Operation Failures**: Video playback atau media handling errors
+- `app/src/main/java/org/dslul/openboard/inputmethod/latin/setup/SetupWizardActivity.java`
+  - Enhanced error handling di semua method
+  - Safe handler access
+  - Improved null checks
+  - Better exception handling
 
 ## Kesimpulan
 
-Perbaikan ini telah mengatasi masalah force close pada:
+Implementasi error handling yang robust ini seharusnya mengatasi masalah force close saat transisi dari step 2 ke step 3. Semua potential crash points telah diidentifikasi dan dilengkapi dengan proper error handling dan fallback mechanisms.
 
-1. **Input Method Selection** - Dengan enhanced error handling dan parameter validation
-2. **Setup Wizard Step 3** - **ROOT CAUSE TELAH DIPERBAIKI** dengan comprehensive fixes:
-   - IPC safety untuk `imm.getInputMethodList()` dan `imm.getEnabledInputMethodList()`
-   - Settings.Secure safety untuk `Settings.Secure.DEFAULT_INPUT_METHOD`
-   - InputMethodInfo ID validation untuk `imi.getId()`
-   - AlertDialog creation safety dengan fallback mechanisms
-   - Activity state validation untuk `isFinishing()` dan `isDestroyed()`
-   - Handler null safety untuk `mHandler` operations
-3. **Setup Wizard Lifecycle** - Dengan comprehensive error handling pada semua lifecycle methods
-4. **Media Operations** - Dengan safe video handling dan fallback mechanisms
-5. **View Management** - Dengan proper view validation dan error handling
-6. **Utility Classes** - Dengan IPC safety dan comprehensive error handling
-
-Aplikasi sekarang lebih stable dan memberikan user experience yang lebih baik dengan:
-
-- **Root cause fixes** untuk setup wizard step 3 force close
-- Graceful error handling pada semua scenarios
-- Informative feedback untuk user
-- Comprehensive logging untuk debugging
-- Fallback mechanisms untuk mencegah crash
-- Safe activity lifecycle management
-- IPC safety untuk semua system service calls
+Jika masalah masih terjadi, periksa logcat untuk error messages yang lebih spesifik dan pastikan semua dependencies (seperti IME settings) berfungsi dengan normal.

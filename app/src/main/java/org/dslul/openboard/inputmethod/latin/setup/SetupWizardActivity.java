@@ -391,13 +391,36 @@ public final class SetupWizardActivity extends Activity implements View.OnClickL
     }
 
     private void invokeSettingsOfThisIme() {
-        final Intent intent = new Intent();
-        intent.setClass(this, SettingsActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
-                | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        intent.putExtra(SettingsActivity.EXTRA_ENTRY_KEY,
-                SettingsActivity.EXTRA_ENTRY_VALUE_APP_ICON);
-        startActivity(intent);
+        try {
+            if (isFinishing() || isDestroyed()) {
+                Log.w(TAG, "invokeSettingsOfThisIme: Activity is finishing or destroyed");
+                return;
+            }
+            
+            final Intent intent = new Intent();
+            intent.setClass(this, SettingsActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED
+                    | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            intent.putExtra(SettingsActivity.EXTRA_ENTRY_KEY,
+                    SettingsActivity.EXTRA_ENTRY_VALUE_APP_ICON);
+            
+            // Check if the intent can be resolved before starting the activity
+            if (getPackageManager().resolveActivity(intent, 0) != null) {
+                startActivity(intent);
+            } else {
+                Log.e(TAG, "invokeSettingsOfThisIme: No activity found to handle intent");
+                android.widget.Toast.makeText(this, "Settings not available", 
+                        android.widget.Toast.LENGTH_SHORT).show();
+            }
+        } catch (SecurityException e) {
+            Log.e(TAG, "SecurityException in invokeSettingsOfThisIme: " + e.getMessage(), e);
+            android.widget.Toast.makeText(this, "Permission denied to access settings", 
+                    android.widget.Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+            Log.e(TAG, "Unexpected error in invokeSettingsOfThisIme: " + e.getMessage(), e);
+            android.widget.Toast.makeText(this, "Unable to open settings", 
+                    android.widget.Toast.LENGTH_SHORT).show();
+        }
     }
 
     void invokeLanguageAndInputSettings() {
@@ -971,15 +994,25 @@ public final class SetupWizardActivity extends Activity implements View.OnClickL
         }
 
         public void setAction(final Runnable action) {
-            mActionLabel.setOnClickListener(this);
-            mAction = action;
+            try {
+                if (mActionLabel != null) {
+                    mActionLabel.setOnClickListener(this);
+                }
+                mAction = action;
+            } catch (Exception e) {
+                Log.e("SetupStep", "Error in setAction: " + e.getMessage(), e);
+            }
         }
 
         @Override
         public void onClick(final View v) {
-            if (v == mActionLabel && mAction != null) {
-                mAction.run();
-                return;
+            try {
+                if (v == mActionLabel && mAction != null) {
+                    mAction.run();
+                    return;
+                }
+            } catch (Exception e) {
+                Log.e("SetupStep", "Error in onClick: " + e.getMessage(), e);
             }
         }
     }
@@ -993,7 +1026,15 @@ public final class SetupWizardActivity extends Activity implements View.OnClickL
         }
 
         public void addStep(final SetupStep step) {
-            mGroup.add(step);
+            try {
+                if (step != null && mGroup != null) {
+                    mGroup.add(step);
+                } else {
+                    Log.e("SetupStepGroup", "addStep: step or mGroup is null");
+                }
+            } catch (Exception e) {
+                Log.e("SetupStepGroup", "Error in addStep: " + e.getMessage(), e);
+            }
         }
 
         public void enableStep(final int enableStepNo, final boolean isStepActionAlreadyDone) {
