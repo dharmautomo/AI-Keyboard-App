@@ -1,3 +1,8 @@
 APP_STL := c++_static
-APP_ABI := all
+APP_ABI := arm64-v8a armeabi-v7a x86_64
 APP_PLATFORM := android-28
+
+# Performance optimizations
+APP_CPPFLAGS += -O2 -DNDEBUG
+APP_CFLAGS += -O2 -DNDEBUG
+APP_OPTIM := release

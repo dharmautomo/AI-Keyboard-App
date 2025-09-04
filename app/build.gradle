@@ -2,17 +2,22 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 
 android {
-    compileSdkVersion 33
+    compileSdkVersion 34
     namespace "org.dslul.openboard.inputmethod.latin"
+
+    buildFeatures {
+        buildConfig true
+    }
 
     defaultConfig {
         applicationId "org.dslul.openboard.inputmethod.latin"
         minSdkVersion 28
-        targetSdkVersion 33
+        targetSdkVersion 34
         versionCode 19
         versionName '1.4.5'
         // TODO: Set your relay base URL via CI/env; never hardcode API keys in-app
-        buildConfigField "String", "KB_RELAY_BASE_URL", '""'
+        // Using dummy URL for development to prevent crashes
+        buildConfigField "String", "KB_RELAY_BASE_URL", '"https://httpbin.org/stream/1"'
     }
 
     buildTypes {
@@ -50,6 +55,13 @@ android {
         jvmTarget = '1.8'
     }
 
+    // NDK optimizations for faster builds
+    packagingOptions {
+        jniLibs {
+            useLegacyPackaging = false
+        }
+    }
+
     // Use default source sets; avoid overriding Java/Kotlin roots to keep IDE classpath correct
 }
 
@@ -68,7 +80,4 @@ dependencies {
     implementation 'com.squareup.okhttp3:okhttp-sse:4.9.3'
     // Coroutines version compatible with Kotlin 1.9.x
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'
-}
-repositories {
-    mavenCentral()
 }

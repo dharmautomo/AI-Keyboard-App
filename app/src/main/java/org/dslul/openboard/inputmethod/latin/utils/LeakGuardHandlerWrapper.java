@@ -18,6 +18,7 @@ package org.dslul.openboard.inputmethod.latin.utils;
 
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 
 import java.lang.ref.WeakReference;
 
@@ -38,6 +39,11 @@ public class LeakGuardHandlerWrapper<T> extends Handler {
 
     @Nullable
     public T getOwnerInstance() {
-        return mOwnerInstanceRef.get();
+        try {
+            return mOwnerInstanceRef.get();
+        } catch (Exception e) {
+            Log.e("LeakGuardHandlerWrapper", "Error getting owner instance: " + e.getMessage(), e);
+            return null;
+        }
     }
 }

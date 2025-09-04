@@ -13,7 +13,16 @@ import org.dslul.openboard.inputmethod.latin.common.Constants
 import org.dslul.openboard.inputmethod.latin.common.StringUtils
 import java.util.*
 
-internal class KeyCodeDescriptionMapper private constructor() {
+internal object KeyCodeDescriptionMapper {
+    private val TAG = KeyCodeDescriptionMapper::class.java.simpleName
+    private const val SPOKEN_LETTER_RESOURCE_NAME_FORMAT = "spoken_accented_letter_%04X"
+    private const val SPOKEN_SYMBOL_RESOURCE_NAME_FORMAT = "spoken_symbol_%04X"
+    private const val SPOKEN_EMOJI_RESOURCE_NAME_FORMAT = "spoken_emoji_%04X"
+    private const val SPOKEN_EMOTICON_RESOURCE_NAME_PREFIX = "spoken_emoticon"
+    private const val SPOKEN_EMOTICON_CODE_POINT_FORMAT = "_%02X"
+    // The resource ID of the string spoken for obscured keys
+    private val OBSCURED_KEY_RES_ID = R.string.spoken_description_dot
+
     // Sparse array of spoken description resource IDs indexed by key codes
     private val mKeyCodeMap = SparseIntArray()
 
@@ -150,114 +159,102 @@ internal class KeyCodeDescriptionMapper private constructor() {
         return resId
     }
 
-    companion object {
-        private val TAG = KeyCodeDescriptionMapper::class.java.simpleName
-        private const val SPOKEN_LETTER_RESOURCE_NAME_FORMAT = "spoken_accented_letter_%04X"
-        private const val SPOKEN_SYMBOL_RESOURCE_NAME_FORMAT = "spoken_symbol_%04X"
-        private const val SPOKEN_EMOJI_RESOURCE_NAME_FORMAT = "spoken_emoji_%04X"
-        private const val SPOKEN_EMOTICON_RESOURCE_NAME_PREFIX = "spoken_emoticon"
-        private const val SPOKEN_EMOTICON_CODE_POINT_FORMAT = "_%02X"
-        // The resource ID of the string spoken for obscured keys
-        private const val OBSCURED_KEY_RES_ID = R.string.spoken_description_dot
-        val instance = KeyCodeDescriptionMapper()
-
-        /**
-         * Returns a context-specific description for the CODE_SWITCH_ALPHA_SYMBOL
-         * key or `null` if there is not a description provided for the
-         * current keyboard context.
-         *
-         * @param context The package's context.
-         * @param keyboard The keyboard on which the key resides.
-         * @return a character sequence describing the action performed by pressing the key
-         */
-        private fun getDescriptionForSwitchAlphaSymbol(context: Context,
-                                                       keyboard: Keyboard?): String? {
-            val keyboardId = keyboard!!.mId
-            val elementId = keyboardId.mElementId
-            val resId: Int
-            resId = when (elementId) {
-                KeyboardId.ELEMENT_ALPHABET, KeyboardId.ELEMENT_ALPHABET_AUTOMATIC_SHIFTED, KeyboardId.ELEMENT_ALPHABET_MANUAL_SHIFTED, KeyboardId.ELEMENT_ALPHABET_SHIFT_LOCK_SHIFTED, KeyboardId.ELEMENT_ALPHABET_SHIFT_LOCKED -> R.string.spoken_description_to_symbol
-                KeyboardId.ELEMENT_SYMBOLS, KeyboardId.ELEMENT_SYMBOLS_SHIFTED -> R.string.spoken_description_to_alpha
-                KeyboardId.ELEMENT_PHONE -> R.string.spoken_description_to_symbol
-                KeyboardId.ELEMENT_PHONE_SYMBOLS -> R.string.spoken_description_to_numeric
-                else -> {
-                    Log.e(TAG, "Missing description for keyboard element ID:$elementId")
-                    return null
-                }
+    /**
+     * Returns a context-specific description for the CODE_SWITCH_ALPHA_SYMBOL
+     * key or `null` if there is not a description provided for the
+     * current keyboard context.
+     *
+     * @param context The package's context.
+     * @param keyboard The keyboard on which the key resides.
+     * @return a character sequence describing the action performed by pressing the key
+     */
+    private fun getDescriptionForSwitchAlphaSymbol(context: Context,
+                                                   keyboard: Keyboard?): String? {
+        val keyboardId = keyboard!!.mId
+        val elementId = keyboardId.mElementId
+        val resId: Int
+        resId = when (elementId) {
+            KeyboardId.ELEMENT_ALPHABET, KeyboardId.ELEMENT_ALPHABET_AUTOMATIC_SHIFTED, KeyboardId.ELEMENT_ALPHABET_MANUAL_SHIFTED, KeyboardId.ELEMENT_ALPHABET_SHIFT_LOCK_SHIFTED, KeyboardId.ELEMENT_ALPHABET_SHIFT_LOCKED -> R.string.spoken_description_to_symbol
+            KeyboardId.ELEMENT_SYMBOLS, KeyboardId.ELEMENT_SYMBOLS_SHIFTED -> R.string.spoken_description_to_alpha
+            KeyboardId.ELEMENT_PHONE -> R.string.spoken_description_to_symbol
+            KeyboardId.ELEMENT_PHONE_SYMBOLS -> R.string.spoken_description_to_numeric
+            else -> {
+                Log.e(TAG, "Missing description for keyboard element ID:$elementId")
+                return null
             }
-            return context.getString(resId)
         }
+        return context.getString(resId)
+    }
 
-        /**
-         * Returns a context-sensitive description of the "Shift" key.
-         *
-         * @param context The package's context.
-         * @param keyboard The keyboard on which the key resides.
-         * @return A context-sensitive description of the "Shift" key.
-         */
-        private fun getDescriptionForShiftKey(context: Context,
-                                              keyboard: Keyboard?): String {
-            val keyboardId = keyboard!!.mId
-            val elementId = keyboardId.mElementId
-            val resId: Int
-            resId = when (elementId) {
-                KeyboardId.ELEMENT_ALPHABET_SHIFT_LOCK_SHIFTED, KeyboardId.ELEMENT_ALPHABET_SHIFT_LOCKED -> R.string.spoken_description_caps_lock
-                KeyboardId.ELEMENT_ALPHABET_AUTOMATIC_SHIFTED, KeyboardId.ELEMENT_ALPHABET_MANUAL_SHIFTED -> R.string.spoken_description_shift_shifted
-                KeyboardId.ELEMENT_SYMBOLS -> R.string.spoken_description_symbols_shift
-                KeyboardId.ELEMENT_SYMBOLS_SHIFTED -> R.string.spoken_description_symbols_shift_shifted
-                else -> R.string.spoken_description_shift
-            }
-            return context.getString(resId)
+    /**
+     * Returns a context-sensitive description of the "Shift" key.
+     *
+     * @param context The package's context.
+     * @param keyboard The keyboard on which the key resides.
+     * @return A context-sensitive description of the "Shift" key.
+     */
+    private fun getDescriptionForShiftKey(context: Context,
+                                          keyboard: Keyboard?): String {
+        val keyboardId = keyboard!!.mId
+        val elementId = keyboardId.mElementId
+        val resId: Int
+        resId = when (elementId) {
+            KeyboardId.ELEMENT_ALPHABET_SHIFT_LOCK_SHIFTED, KeyboardId.ELEMENT_ALPHABET_SHIFT_LOCKED -> R.string.spoken_description_caps_lock
+            KeyboardId.ELEMENT_ALPHABET_AUTOMATIC_SHIFTED, KeyboardId.ELEMENT_ALPHABET_MANUAL_SHIFTED -> R.string.spoken_description_shift_shifted
+            KeyboardId.ELEMENT_SYMBOLS -> R.string.spoken_description_symbols_shift
+            KeyboardId.ELEMENT_SYMBOLS_SHIFTED -> R.string.spoken_description_symbols_shift_shifted
+            else -> R.string.spoken_description_shift
         }
+        return context.getString(resId)
+    }
 
-        /**
-         * Returns a context-sensitive description of the "Enter" action key.
-         *
-         * @param context The package's context.
-         * @param keyboard The keyboard on which the key resides.
-         * @param key The key to describe.
-         * @return Returns a context-sensitive description of the "Enter" action key.
-         */
-        private fun getDescriptionForActionKey(context: Context, keyboard: Keyboard?,
-                                               key: Key): String {
-            val keyboardId = keyboard!!.mId
-            val actionId = keyboardId.imeAction()
-            val resId: Int
-            // Always use the label, if available.
-            if (!TextUtils.isEmpty(key.label)) {
-                return key.label!!.trim { it <= ' ' }
-            }
-            resId = when (actionId) {
-                EditorInfo.IME_ACTION_SEARCH -> R.string.spoken_description_search
-                EditorInfo.IME_ACTION_GO -> R.string.label_go_key
-                EditorInfo.IME_ACTION_SEND -> R.string.label_send_key
-                EditorInfo.IME_ACTION_NEXT -> R.string.label_next_key
-                EditorInfo.IME_ACTION_DONE -> R.string.label_done_key
-                EditorInfo.IME_ACTION_PREVIOUS -> R.string.label_previous_key
-                else -> R.string.spoken_description_return
-            }
-            return context.getString(resId)
+    /**
+     * Returns a context-sensitive description of the "Enter" action key.
+     *
+     * @param context The package's context.
+     * @param keyboard The keyboard on which the key resides.
+     * @param key The key to describe.
+     * @return Returns a context-sensitive description of the "Enter" action key.
+     */
+    private fun getDescriptionForActionKey(context: Context, keyboard: Keyboard?,
+                                           key: Key): String {
+        val keyboardId = keyboard!!.mId
+        val actionId = keyboardId.imeAction()
+        val resId: Int
+        // Always use the label, if available.
+        if (!TextUtils.isEmpty(key.label)) {
+            return key.label!!.trim { it <= ' ' }
         }
+        resId = when (actionId) {
+            EditorInfo.IME_ACTION_SEARCH -> R.string.spoken_description_search
+            EditorInfo.IME_ACTION_GO -> R.string.label_go_key
+            EditorInfo.IME_ACTION_SEND -> R.string.label_send_key
+            EditorInfo.IME_ACTION_NEXT -> R.string.label_next_key
+            EditorInfo.IME_ACTION_DONE -> R.string.label_done_key
+            EditorInfo.IME_ACTION_PREVIOUS -> R.string.label_previous_key
+            else -> R.string.spoken_description_return
+        }
+        return context.getString(resId)
+    }
 
-        // TODO: Remove this method once TTS supports emoticon verbalization.
-        private fun getSpokenEmoticonDescription(context: Context,
-                                                 outputText: String?): String? {
-            val sb = StringBuilder(SPOKEN_EMOTICON_RESOURCE_NAME_PREFIX)
-            val textLength = outputText!!.length
-            var index = 0
-            while (index < textLength) {
-                val codePoint = outputText.codePointAt(index)
-                sb.append(String.format(Locale.ROOT, SPOKEN_EMOTICON_CODE_POINT_FORMAT, codePoint))
-                index = outputText.offsetByCodePoints(index, 1)
-            }
-            val resourceName = sb.toString()
-            val resources = context.resources
-            // Note that the resource package name may differ from the context package name.
-            val resourcePackageName = resources.getResourcePackageName(
-                    R.string.spoken_description_unknown)
-            val resId = resources.getIdentifier(resourceName, "string", resourcePackageName)
-            return if (resId == 0) null else resources.getString(resId)
+    // TODO: Remove this method once TTS supports emoticon verbalization.
+    private fun getSpokenEmoticonDescription(context: Context,
+                                             outputText: String?): String? {
+        val sb = StringBuilder(SPOKEN_EMOTICON_RESOURCE_NAME_PREFIX)
+        val textLength = outputText!!.length
+        var index = 0
+        while (index < textLength) {
+            val codePoint = outputText.codePointAt(index)
+            sb.append(String.format(Locale.ROOT, SPOKEN_EMOTICON_CODE_POINT_FORMAT, codePoint))
+            index = outputText.offsetByCodePoints(index, 1)
         }
+        val resourceName = sb.toString()
+        val resources = context.resources
+        // Note that the resource package name may differ from the context package name.
+        val resourcePackageName = resources.getResourcePackageName(
+                R.string.spoken_description_unknown)
+        val resId = resources.getIdentifier(resourceName, "string", resourcePackageName)
+        return if (resId == 0) null else resources.getString(resId)
     }
 
     init { // Special non-character codes defined in Keyboard
