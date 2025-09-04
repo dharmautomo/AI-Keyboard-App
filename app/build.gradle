@@ -13,6 +13,8 @@ android {
         versionName '1.4.5'
         // TODO: Set your relay base URL via CI/env; never hardcode API keys in-app
         buildConfigField "String", "KB_RELAY_BASE_URL", '""'
+        // Ensure field exists for all variants; debug overrides with local value
+        buildConfigField "String", "OPENAI_API_KEY_DEV", '""'
     }
 
     buildTypes {
@@ -22,6 +24,16 @@ android {
             jniDebuggable false
             renderscriptDebuggable false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            // Inject dev-only OpenAI API key from local.properties (not packaged in release)
+            def lp = new Properties()
+            def lpFile = rootProject.file('local.properties')
+            if (lpFile.exists()) {
+                lp.load(new FileInputStream(lpFile))
+            }
+            def openAiKey = lp.getProperty('OPENAI_API_KEY', '')
+            buildConfigField 'String', 'OPENAI_API_KEY_DEV', '"' + openAiKey + '"'
         }
     }
 
@@ -68,6 +80,8 @@ dependencies {
     implementation 'com.squareup.okhttp3:okhttp-sse:4.9.3'
     // Coroutines version compatible with Kotlin 1.9.x
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'
+    // EncryptedSharedPreferences for secure key storage
+    implementation 'androidx.security:security-crypto:1.1.0-alpha06'
 }
 repositories {
     mavenCentral()

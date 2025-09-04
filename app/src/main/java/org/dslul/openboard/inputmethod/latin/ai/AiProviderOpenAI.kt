@@ -5,6 +5,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
+import okhttp3.Interceptor
+import okhttp3.Response
+import java.io.IOException
+import java.util.concurrent.TimeUnit
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Request as OkRequest
 import okhttp3.sse.EventSource
@@ -17,8 +21,9 @@ import org.json.JSONObject
  * Provider that talks to a secure relay exposing OpenAI-compatible SSE streaming.
  * Never embeds provider API keys in app. Uses BuildConfig.KB_RELAY_BASE_URL.
  */
-class AiProviderOpenAI(
-    private val httpClient: OkHttpClient = OkHttpClient()
+class AiProviderOpenAI @JvmOverloads constructor(
+    private val appContext: android.content.Context,
+    private val httpClient: OkHttpClient = newHttpClient(appContext)
 ) : AiProvider {
 
     private fun actionToInstruction(action: AiProvider.Action, targetLanguage: String?, custom: String?): String {
@@ -32,8 +37,12 @@ class AiProviderOpenAI(
     }
 
     override fun stream(request: AiProvider.Request): Flow<AiProvider.StreamChunk> = callbackFlow {
-        val relay = BuildConfig.KB_RELAY_BASE_URL
-        require(relay.isNotBlank()) { "KB_RELAY_BASE_URL is empty" }
+        val apiKey = ApiKeyProvider.getOpenAiKey(appContext)
+        val base = "https://api.openai.com"
+        if (apiKey.isNullOrBlank()) {
+            close(IllegalStateException("Missing OPENAI_API_KEY"))
+            return@callbackFlow
+        }
 
         val before = request.textBeforeCursor.takeLast(request.truncateAtChars)
         val after = request.textAfterCursor.take(request.truncateAtChars)
@@ -52,17 +61,14 @@ class AiProviderOpenAI(
             }
         }
 
-        val json = JSONObject()
-            .put("model", "gpt-5")
-            .put("stream", true)
-            .put("messages", listOf(
-                mapOf("role" to "system", "content" to "You are a helpful keyboard assistant."),
-                mapOf("role" to "user", "content" to prompt)
-            ))
+        // Try Responses API first
+        val responsesJson = JSONObject()
+            .put("model", "gpt-5-fast")
+            .put("input", prompt)
 
-        val req = OkRequest.Builder()
-            .url(relay.trimEnd('/') + "/v1/chat/completions")
-            .post(json.toString().toRequestBody("application/json".toMediaType()))
+        var req = OkRequest.Builder()
+            .url(base + "/v1/responses")
+            .post(responsesJson.toString().toRequestBody("application/json".toMediaType()))
             .build()
 
         val listener = object : EventSourceListener() {
@@ -80,8 +86,43 @@ class AiProviderOpenAI(
             }
         }
 
-        val es = EventSources.createFactory(httpClient).newEventSource(req, listener)
+        var es = EventSources.createFactory(httpClient).newEventSource(req, listener)
+
         awaitClose { es.cancel() }
+    }
+
+    companion object {
+        private fun newHttpClient(context: android.content.Context): OkHttpClient {
+            val apiKey = ApiKeyProvider.getOpenAiKey(context)
+            val authInterceptor = Interceptor { chain ->
+                val original = chain.request()
+                val builder = original.newBuilder()
+                    .header("Content-Type", "application/json")
+                if (!apiKey.isNullOrBlank()) {
+                    builder.header("Authorization", "Bearer $apiKey")
+                }
+                chain.proceed(builder.build())
+            }
+
+            val retry429Interceptor = Interceptor { chain ->
+                var attempt = 0
+                var resp: Response = chain.proceed(chain.request())
+                while (resp.code == 429 && attempt < 1) {
+                    resp.close()
+                    attempt++
+                    try { Thread.sleep(800L * (1 shl attempt)) } catch (_: InterruptedException) { }
+                    resp = chain.proceed(chain.request())
+                }
+                resp
+            }
+
+            return OkHttpClient.Builder()
+                .connectTimeout(15, TimeUnit.SECONDS)
+                .readTimeout(15, TimeUnit.SECONDS)
+                .addInterceptor(authInterceptor)
+                .addInterceptor(retry429Interceptor)
+                .build()
+        }
     }
 }
 
