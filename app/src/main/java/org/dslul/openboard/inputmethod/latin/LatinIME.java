@@ -921,18 +921,48 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
                 mInputLogic.mConnection.setSelection(start, end);
             } catch (Throwable ignored) {}
 
+            // Open panel immediately with seed/loading text
+            final String seedText;
+            if (selected != null && selected.length() > 0) {
+                seedText = selected.toString();
+            } else {
+                final StringBuilder sb = new StringBuilder();
+                if (before != null) sb.append(before);
+                if (after != null) sb.append(after);
+                seedText = sb.length() > 0 ? sb.toString() : "Improving…";
+            }
+            try { showImproveOverlay(seedText); } catch (Throwable ignored) {}
+
             org.dslul.openboard.inputmethod.latin.ai.AiActionController controller =
                     new org.dslul.openboard.inputmethod.latin.ai.AiActionController(
                             new org.dslul.openboard.inputmethod.latin.ai.AiProviderOpenAI(getApplicationContext()),
                             content -> {
                                 getMainLooper().getQueue().addIdleHandler(() -> {
-                                    showImproveOverlay(content);
+                                    try {
+                                        // Update overlay text with final content
+                                        final android.view.View current = mImproveOverlay;
+                                        if (current != null) {
+                                            final android.widget.TextView tv2 = current.findViewById(org.dslul.openboard.inputmethod.latin.R.id.txt_improved);
+                                            if (tv2 != null) tv2.setText(content);
+                                            final android.view.View btn = current.findViewById(org.dslul.openboard.inputmethod.latin.R.id.btn_replace);
+                                            if (btn != null) btn.setEnabled(true);
+                                        }
+                                    } catch (Throwable ignored2) {}
                                     return false;
                                 });
                                 return kotlin.Unit.INSTANCE;
                             },
                             progress -> {
-                                // TODO: show loading state in overlay if available
+                                getMainLooper().getQueue().addIdleHandler(() -> {
+                                    try {
+                                        final android.view.View current = mImproveOverlay;
+                                        if (current != null && progress != null) {
+                                            final android.widget.TextView tv2 = current.findViewById(org.dslul.openboard.inputmethod.latin.R.id.txt_improved);
+                                            if (tv2 != null) tv2.setText(progress);
+                                        }
+                                    } catch (Throwable ignored2) {}
+                                    return false;
+                                });
                                 return kotlin.Unit.INSTANCE;
                             }
                     );
@@ -993,6 +1023,8 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
             final android.view.View overlay = inflater.inflate(org.dslul.openboard.inputmethod.latin.R.layout.improve_overlay, root, false);
             final android.widget.TextView tv = overlay.findViewById(org.dslul.openboard.inputmethod.latin.R.id.txt_improved);
             if (tv != null) tv.setText(improvedText);
+            final android.view.View btnReplace = overlay.findViewById(org.dslul.openboard.inputmethod.latin.R.id.btn_replace);
+            if (btnReplace != null) try { btnReplace.setEnabled(false); } catch (Throwable ignored) {}
             overlay.findViewById(org.dslul.openboard.inputmethod.latin.R.id.btn_back).setOnClickListener(v -> {
                 try {
                     if (overlay.getParent() == root) root.removeView(overlay);
@@ -1003,7 +1035,7 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
                     org.dslul.openboard.inputmethod.latin.utils.CrashLogger.INSTANCE.logException(this, "ImproveBack", t);
                 }
             });
-            overlay.findViewById(org.dslul.openboard.inputmethod.latin.R.id.btn_replace).setOnClickListener(v -> {
+            (btnReplace != null ? btnReplace : overlay.findViewById(org.dslul.openboard.inputmethod.latin.R.id.btn_replace)).setOnClickListener(v -> {
                 CharSequence newTextCs = tv != null ? tv.getText() : improvedText;
                 final String newText = newTextCs != null ? newTextCs.toString() : improvedText;
 
