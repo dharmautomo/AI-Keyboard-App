@@ -37,12 +37,14 @@ class AiProviderOpenAI @JvmOverloads constructor(
     }
 
     override fun stream(request: AiProvider.Request): Flow<AiProvider.StreamChunk> = callbackFlow {
-        val apiKey = ApiKeyProvider.getOpenAiKey(appContext)
-        val base = "https://api.openai.com"
-        if (apiKey.isNullOrBlank()) {
-            close(IllegalStateException("Missing OPENAI_API_KEY"))
-            return@callbackFlow
-        }
+        try {
+            val apiKey = ApiKeyProvider.getOpenAiKey(appContext)
+            val base = "https://api.openai.com"
+            if (apiKey.isNullOrBlank()) {
+                trySend(AiProvider.StreamChunk(content = "", isDone = true))
+                close(IllegalStateException("Missing OPENAI_API_KEY"))
+                return@callbackFlow
+            }
 
         val before = request.textBeforeCursor.takeLast(request.truncateAtChars)
         val after = request.textAfterCursor.take(request.truncateAtChars)
@@ -66,10 +68,10 @@ class AiProviderOpenAI @JvmOverloads constructor(
             .put("model", "gpt-5-fast")
             .put("input", prompt)
 
-        var req = OkRequest.Builder()
-            .url(base + "/v1/responses")
-            .post(responsesJson.toString().toRequestBody("application/json".toMediaType()))
-            .build()
+            var req = OkRequest.Builder()
+                .url(base + "/v1/responses")
+                .post(responsesJson.toString().toRequestBody("application/json".toMediaType()))
+                .build()
 
         val listener = object : EventSourceListener() {
             override fun onEvent(eventSource: EventSource, id: String?, type: String?, data: String) {
@@ -86,9 +88,12 @@ class AiProviderOpenAI @JvmOverloads constructor(
             }
         }
 
-        var es = EventSources.createFactory(httpClient).newEventSource(req, listener)
-
-        awaitClose { es.cancel() }
+            var es = EventSources.createFactory(httpClient).newEventSource(req, listener)
+            awaitClose { es.cancel() }
+        } catch (t: Throwable) {
+            trySend(AiProvider.StreamChunk(content = "", isDone = true))
+            close(t)
+        }
     }
 
     companion object {

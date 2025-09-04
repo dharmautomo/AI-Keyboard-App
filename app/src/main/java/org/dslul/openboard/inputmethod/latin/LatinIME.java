@@ -978,29 +978,34 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
     }
 
     private void showImproveOverlay(final String improvedText) {
-        if (mInputView == null) return;
-        // Attach overlay inside the input window root container (safe placement)
-        final android.view.ViewGroup root = mInputView instanceof android.view.ViewGroup
-                ? (android.view.ViewGroup) mInputView
-                : (android.view.ViewGroup) getWindow().getWindow().getDecorView();
-        final android.view.LayoutInflater inflater = android.view.LayoutInflater.from(this);
-        // Ensure only one overlay exists at a time
-        if (mImproveOverlay != null && mImproveOverlay.getParent() == root) {
-            root.removeView(mImproveOverlay);
-            mImproveOverlay = null;
-        }
-        final android.view.View overlay = inflater.inflate(org.dslul.openboard.inputmethod.latin.R.layout.improve_overlay, root, false);
-        final android.widget.TextView tv = overlay.findViewById(org.dslul.openboard.inputmethod.latin.R.id.txt_improved);
-        tv.setText(improvedText);
-        overlay.findViewById(org.dslul.openboard.inputmethod.latin.R.id.btn_back).setOnClickListener(v -> {
-            if (overlay.getParent() == root) root.removeView(overlay);
-            if (mImproveOverlay == overlay) mImproveOverlay = null;
-            // Make sure IME stays visible after closing the panel
-            requestShowSelf(0);
-        });
-        overlay.findViewById(org.dslul.openboard.inputmethod.latin.R.id.btn_replace).setOnClickListener(v -> {
-            CharSequence newTextCs = tv.getText();
-            final String newText = newTextCs != null ? newTextCs.toString() : improvedText;
+        try {
+            if (mInputView == null) return;
+            // Attach overlay inside the input window root container (safe placement)
+            final android.view.ViewGroup root = mInputView instanceof android.view.ViewGroup
+                    ? (android.view.ViewGroup) mInputView
+                    : (android.view.ViewGroup) getWindow().getWindow().getDecorView();
+            final android.view.LayoutInflater inflater = android.view.LayoutInflater.from(this);
+            // Ensure only one overlay exists at a time
+            if (mImproveOverlay != null && mImproveOverlay.getParent() == root) {
+                root.removeView(mImproveOverlay);
+                mImproveOverlay = null;
+            }
+            final android.view.View overlay = inflater.inflate(org.dslul.openboard.inputmethod.latin.R.layout.improve_overlay, root, false);
+            final android.widget.TextView tv = overlay.findViewById(org.dslul.openboard.inputmethod.latin.R.id.txt_improved);
+            if (tv != null) tv.setText(improvedText);
+            overlay.findViewById(org.dslul.openboard.inputmethod.latin.R.id.btn_back).setOnClickListener(v -> {
+                try {
+                    if (overlay.getParent() == root) root.removeView(overlay);
+                    if (mImproveOverlay == overlay) mImproveOverlay = null;
+                    // Make sure IME stays visible after closing the panel
+                    requestShowSelf(0);
+                } catch (Throwable t) {
+                    org.dslul.openboard.inputmethod.latin.utils.CrashLogger.INSTANCE.logException(this, "ImproveBack", t);
+                }
+            });
+            overlay.findViewById(org.dslul.openboard.inputmethod.latin.R.id.btn_replace).setOnClickListener(v -> {
+                CharSequence newTextCs = tv != null ? tv.getText() : improvedText;
+                final String newText = newTextCs != null ? newTextCs.toString() : improvedText;
 
             // Replace using cached selection; fallback to entire content if invalid
             final android.view.inputmethod.InputConnection ic = getCurrentInputConnection();
@@ -1058,21 +1063,25 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
                 mInputLogic.mConnection.commitText(newText, 1);
             }
 
-            if (overlay.getParent() == root) root.removeView(overlay);
-            if (mImproveOverlay == overlay) mImproveOverlay = null;
-            requestShowSelf(0);
-        });
+                if (overlay.getParent() == root) root.removeView(overlay);
+                if (mImproveOverlay == overlay) mImproveOverlay = null;
+                requestShowSelf(0);
+            });
 
         // Compute height equal to current IME height using WindowInsets and fallback to default keyboard height
-        final android.view.View overlayRoot = overlay.findViewById(org.dslul.openboard.inputmethod.latin.R.id.improve_overlay_root);
-        if (overlayRoot != null) {
+            final android.view.View overlayRoot = overlay.findViewById(org.dslul.openboard.inputmethod.latin.R.id.improve_overlay_root);
+            if (overlayRoot != null) {
             // Read current insets for IME
-            final androidx.core.view.WindowInsetsCompat insets = androidx.core.view.ViewCompat.getRootWindowInsets(root);
-            int imeHeight = 0;
-            if (insets != null) {
-                final androidx.core.graphics.Insets ime = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.ime());
-                imeHeight = ime != null ? ime.bottom : 0;
-            }
+                int imeHeight = 0;
+                try {
+                    final androidx.core.view.WindowInsetsCompat insets = androidx.core.view.ViewCompat.getRootWindowInsets(root);
+                    if (insets != null) {
+                        final androidx.core.graphics.Insets ime = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.ime());
+                        imeHeight = ime != null ? ime.bottom : 0;
+                    }
+                } catch (Throwable t) {
+                    org.dslul.openboard.inputmethod.latin.utils.CrashLogger.INSTANCE.logException(this, "ImproveInsets", t);
+                }
             // Fallback to default keyboard height if IME hidden or 0
             if (imeHeight <= 0) {
                 try {
@@ -1083,38 +1092,46 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
                 }
             }
 
-            final android.view.ViewGroup.LayoutParams lp = overlayRoot.getLayoutParams();
-            lp.height = imeHeight;
-            overlayRoot.setLayoutParams(lp);
+                final android.view.ViewGroup.LayoutParams lp = overlayRoot.getLayoutParams();
+                if (lp != null) {
+                    lp.height = imeHeight;
+                    overlayRoot.setLayoutParams(lp);
+                }
 
             // Ensure it sits at the bottom and above nav bar
-            if (lp instanceof android.widget.FrameLayout.LayoutParams) {
-                final android.widget.FrameLayout.LayoutParams flp = (android.widget.FrameLayout.LayoutParams) lp;
-                flp.gravity = android.view.Gravity.BOTTOM;
-                overlayRoot.setLayoutParams(flp);
-            }
+                if (lp instanceof android.widget.FrameLayout.LayoutParams) {
+                    final android.widget.FrameLayout.LayoutParams flp = (android.widget.FrameLayout.LayoutParams) lp;
+                    flp.gravity = android.view.Gravity.BOTTOM;
+                    overlayRoot.setLayoutParams(flp);
+                }
 
             // Listen for future inset changes to avoid layout jumps
-            androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(overlayRoot, (v, wInsets) -> {
-                final androidx.core.graphics.Insets i = wInsets.getInsets(androidx.core.view.WindowInsetsCompat.Type.ime());
-                int h = i != null ? i.bottom : 0;
-                if (h <= 0) {
+                androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(overlayRoot, (v, wInsets) -> {
                     try {
-                        h = getResources().getDimensionPixelSize(org.dslul.openboard.inputmethod.latin.R.dimen.config_default_keyboard_height);
-                    } catch (Throwable ignored2) {}
-                }
-                final android.view.ViewGroup.LayoutParams lp2 = v.getLayoutParams();
-                if (h > 0 && lp2.height != h) {
-                    lp2.height = h;
-                    v.setLayoutParams(lp2);
-                }
-                return wInsets;
-            });
-        }
+                        final androidx.core.graphics.Insets i = wInsets.getInsets(androidx.core.view.WindowInsetsCompat.Type.ime());
+                        int h = i != null ? i.bottom : 0;
+                        if (h <= 0) {
+                            try {
+                                h = getResources().getDimensionPixelSize(org.dslul.openboard.inputmethod.latin.R.dimen.config_default_keyboard_height);
+                            } catch (Throwable ignored2) {}
+                        }
+                        final android.view.ViewGroup.LayoutParams lp2 = v.getLayoutParams();
+                        if (lp2 != null && h > 0 && lp2.height != h) {
+                            lp2.height = h;
+                            v.setLayoutParams(lp2);
+                        }
+                    } catch (Throwable ignored3) {}
+                    return wInsets;
+                });
+            }
 
         // Add to root after sizing
         mImproveOverlay = overlay;
         root.addView(mImproveOverlay);
+        } catch (Throwable t) {
+            org.dslul.openboard.inputmethod.latin.utils.CrashLogger.INSTANCE.logException(this, "ShowImproveOverlay", t);
+            try { android.widget.Toast.makeText(this, "Unable to open Improve", android.widget.Toast.LENGTH_SHORT).show(); } catch (Throwable ignored) {}
+        }
     }
 
     private void cacheImproveSelectionSnapshot() {
