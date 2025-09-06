@@ -851,7 +851,14 @@ public class LatinIME extends InputMethodService implements KeyboardActionListen
         }
         final View btnImprove = view.findViewById(R.id.ai_btn_improve);
         if (btnImprove != null) {
-            btnImprove.setOnClickListener(v -> onAiAction(org.dslul.openboard.inputmethod.latin.ai.AiProvider.Action.IMPROVE));
+            btnImprove.setOnClickListener(v -> {
+                try {
+                    onAiAction(org.dslul.openboard.inputmethod.latin.ai.AiProvider.Action.IMPROVE);
+                } catch (Throwable t) {
+                    org.dslul.openboard.inputmethod.latin.utils.CrashLogger.INSTANCE.logException(this, "ImproveClick", t);
+                    try { android.widget.Toast.makeText(this, "Unable to open Improve", android.widget.Toast.LENGTH_SHORT).show(); } catch (Throwable ignored) {}
+                }
+            });
         }
         final View btnTranslate = view.findViewById(R.id.ai_btn_translate);
         if (btnTranslate != null) {
